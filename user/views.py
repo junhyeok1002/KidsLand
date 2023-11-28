@@ -139,6 +139,7 @@ class GetDateInfo(APIView):
     def post(self, request, *args, **kwargs):
         today = datetime.now()   # 현재 날짜
         disabled_dates = list()  # 안되는 날짜를 담을 리스트
+        abled_dates = list()  # 되는 날짜를 담을 리스트
 
         # 오늘부터 7일 뒤까지 예약 가능
         start_date = today.strftime("%Y-%m-%d")
@@ -156,10 +157,15 @@ class GetDateInfo(APIView):
 
             # 오늘이라면 시간이 지났는지 여부 확인하여 닫을지 말지 여부 결정
 
+            else :
+                formatted_day = current_day.strftime("%Y-%m-%d")
+                abled_dates.append(formatted_day)
+
         # JSON 형식으로 응답
         response_data = {
             'start_date': start_date,
             'end_date': end_date,
             'disabled_dates': disabled_dates,
+            'abled_dates': abled_dates,
         }
         return JsonResponse(response_data)
