@@ -73,7 +73,7 @@
     $(document).ready(function () {
         // Ajax 요청
         $.ajax({
-            url: '/user/getDateInfo/',  // 실제 엔드포인트에 맞게 수정
+            url: '/user/getDateInfo/',
             type: 'POST',
             dataType: 'json',
             success: function (data) {
@@ -85,7 +85,10 @@
                     endDate: data.end_date,
                     datesDisabled: data.disabled_dates,
                     language: 'ko',  // 한국어로 설정
-                }).on('show', function (e) {
+                }).on('changeDate', function (e) {
+                    // 날짜가 변경될 때 시간을 초기화 -> 날짜 별 시간의 인원수를 보여주기 위함 + 운영 안정성
+                    $('#timeSelect').val("시간을 선택하세요");
+                }).on('show', function (e) {  // data picker 위치 정신 못차리는 거 임시로 수정
                     // datepicker가 나타날 때 스타일을 추가
                     var inputOffset = $('#datepicker').offset();
 
