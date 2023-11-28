@@ -31,6 +31,7 @@ class Phone_Verification(APIView):
         phone_number = request.data.get('phone_number', None)
 
         security_number = str(random.randint(0, 999999)).zfill(6)
+        request.session['security_number'] = security_number
 
         # ================================================================== 문자 보낼 때 필수 key값
         # API key, userid, sender, receiver, msg
@@ -50,8 +51,7 @@ class Phone_Verification(APIView):
         send_response = requests.post(SEND_URL, data=sms_data)
         print(send_response.json())
 
-        response_data = {'security_number': security_number}
-        return JsonResponse(response_data)
+        return Response(status=200)
 
 
 class Phone_Message(APIView):
@@ -111,14 +111,27 @@ class CheckIn(APIView):
     def get(self, request):
         return render(request, "user/checkIn.html")
 
+    # def post(self, request):
+    #     return render(request, "user/checkIn.html")
+    #     # TODO 회원가입
+    #     #        email = request.data.get('email', None)
+    #     check_type = request.GET.get('type', '')
+    #
+    #     if check_type == 'checkIn':
+    #         pass
+    #         # return HttpResponse('Check In')
+    #
+    #     return Response(status=200)
+
+
+class Check_Security_Number(APIView):
     def post(self, request):
-        return render(request, "user/checkIn.html")
-        # TODO 회원가입
-        #        email = request.data.get('email', None)
-        check_type = request.GET.get('type', '')
+        input_security_number = request.data.get('input_security_number', None)
+        security_number = request.session['security_number']
 
-        if check_type == 'checkIn':
-            pass
-            # return HttpResponse('Check In')
+        # TODO: 실제 인증번호 확인 로직을 구현
+        # 여기서는 간단하게 입력된 인증번호와 특정 값과의 비교
+        success = (input_security_number == security_number)
 
-        return Response(status=200)
+        # 인증 결과를 JSON 응답으로 전송
+        return JsonResponse({'success': success})
