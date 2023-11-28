@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>키즈랜드 실내놀이터 신청</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+
+    <!-- Jquery -->
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Popper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <!-- Bootstrap Datepicker CSS -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+    <!-- Bootstrap Datepicker JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+
+
+</head>
+<body style="max-width: 900px; margin: 0 auto;display: block;">
+
+<div style="width: 100%; text-align: center; font-size:0.8rem; background-color: #dfd3c3; color: dimgray;
+        height: 6rem; align-items: center; justify-content: center; border-radius: 10px;">
+    <br>
+    <h3>키즈랜드 실내놀이터 신청</h3>
+    < 대전새중앙교회 1층 웰컴카페 옆 >
+    <br>
+</div>
+
+
+<div style="margin: 1rem 0rem;">
+    <div class="container mt-5" style="margin: 0 auto !important; width: 90%; padding: 0;">
+        <input type="text" id="datepicker" class="form-control" placeholder="날짜를 선택하세요">
+    </div>
+</div>
+
+
+<select class="form-select" aria-label="Default select example"
+        style="width: 90%; display: flex; justify-content: center; align-items: center; margin: 0 auto; color: #495057;"
+        id="timeSelect">
+    <option selected>시간을 선택하세요</option>
+    <option value="A">A타임 : 1:30-3:30(120분)</option>
+    <option value="B">B타임 : 4:00-6:00(120분)</option>
+</select>
+
+<script>
+    // Date Picker 초기화
+    $(document).ready(function () {
+        $('#datepicker').datepicker({
+            format: 'yyyy-mm-dd', // 원하는 날짜 형식 지정
+            autoclose: true,
+            startDate: '2023-11-23', // 시작일 설정
+            endDate: '2023-11-30',   // 종료일 설정
+            datesDisabled: ['2023-11-25', '2023-11-30'], // 비활성화할 특정 날짜들을 배열로 전달
+            placement: 'bottom',
+        });
+
+        // 시간 선택 이벤트 처리
+        $('#timeSelect').change(function () {
+            // 날짜 입력란이 비어 있으면
+            if ($('#datepicker').val() === "") {
+                alert("날짜를 선택하세요.");
+                // 선택 취소
+                $('#timeSelect').val("시간을 선택하세요");
+            }
+        });
+    });
+</script>
+
+<div style="margin: 1rem 0rem;">
+    <div class="container mt-5" style="margin: 0 auto !important; width: 90%; padding: 0;">
+        <input type="text" id="nameInput" class="form-control" placeholder="아이의 이름을 입력해 주세요">
+    </div>
+</div>
+
+
+<div style="display: flex; justify-content: space-between; margin: 0 auto; width: 90%;">
+    <!-- 첫 번째 입력 창 -->
+    <input type="text" class="form-control" id="birthInput" placeholder="출생년도(8자리)">
+</div>
+<script>
+    // 출생년도 앞의 4자리를 담을 전역 변수
+    let birthYearPrefix = '';
+    // 출생년도 입력 창 이벤트 처리
+    document.getElementById('birthInput').addEventListener('input', function () {
+        // 8자리까지만 입력받도록 자르기
+        this.value = this.value.slice(0, 8);
+
+        // 앞 4자리를 전역 변수에 저장
+        birthYearPrefix = this.value.slice(0, 4);
+    });
+</script>
+
+<div style="margin: 1rem 0rem;">
+    <div style="display: flex; justify-content: space-between; margin: 0 auto; width: 90%;">
+        <!-- 휴대폰 번호 입력 창 -->
+        <input type="text" class="form-control" id="phoneInput" placeholder="휴대폰 번호(-제외)">
+    </div>
+</div>
+
+<script>
+    // 휴대폰 번호 입력 창 이벤트 처리
+    document.getElementById('phoneInput').addEventListener('input', function () {
+        // 11자리까지만 입력받도록 자르기
+        this.value = this.value.slice(0, 11);
+    });
+</script>
+
+
+<button class="btn btn-outline-secondary" type="button" id="button-addon1"
+        style="box-sizing: border-box; display: flex; justify-content: center;
+        margin: 0 auto; width: 90%; background-color: #f1f3f5; text-align: center;">인증번호 전송
+</button>
+
+<div id="verificationInput" style="display: none">
+    <div style="margin: 1rem 0rem;">
+        <div class="input-security-number"
+             style="width: 90%; display: flex; justify-content: center; align-items: center; margin: 0 auto;">
+
+
+            <input type="text" class="form-control" id="input_security_number" placeholder="인증 번호를 입력해주세요!"
+                   aria-label="Recipient's username"
+                   aria-describedby="button-addon2" style=" box-sizing: border-box;">
+
+
+        </div>
+    </div>
+    <div style="margin: 1rem 0rem;">
+        <button class="btn btn-outline-secondary" type="button" id="button-addon2"
+                style="box-sizing: border-box; display: flex; justify-content: center;
+        margin: 0 auto; width: 90%; background-color: #f1f3f5; text-align: center;">인증하기
+        </button>
+    </div>
+</div>
+
+<script>
+    let securityNumber;  // 변수를 전역으로 선언하여 두 이벤트 핸들러에서 접근 가능하게 함
+    let datepicker;
+    let timeSelect;
+    let nameInput;
+    let birthInput;
+    let phone_number;
+
+    $('#button-addon1').click(function () {
+        datepicker = $('#datepicker').val();
+        timeSelect = $('#timeSelect').val();
+        nameInput = $('#nameInput').val();
+        birthInput = $('#birthInput').val();
+        phone_number = $('#phoneInput').val();
+
+        if (!phone_number || !birthInput || !nameInput || !datepicker || !(timeSelect === "A" || timeSelect === "B")) {
+            alert("입력되지 않은 정보가 있습니다. 모든 정보를 입력하세요.");
+            return; // 필수 정보가 없으면 함수 종료
+        }
+
+
+        // 현재 년도
+        var currentYear = new Date().getFullYear();
+
+        // 입력된 출생년도
+        birthYear = birthInput.slice(0, 8);
+        var birthYear = parseInt(birthYear.slice(0, 4));
+        var age = currentYear - birthYear + 1;
+
+        // 출생년도가 현재 년도로부터 11년 이상 지났는지 확인
+        if (age > 11) {
+            // 출생년도가 11년 이상 지났을 때의 동작을 여기에 추가
+            alert("11살까지만 입장 가능합니다.");
+            location.replace("/");
+            return;
+        }
+
+        $.ajax({
+            url: "/user/Phone_Verification/",
+            data: {
+                phone_number: phone_number,
+            },
+            method: "POST",
+            success: function (response) {
+                console.log("성공");
+                securityNumber = response.security_number;  // 전역 변수에 저장
+                alert("인증 번호를 보냈습니다");
+
+                $('#verificationInput').show();
+            },
+            error: function (error) {
+                console.error("Error:", error);
+            },
+            complete: function () {
+                console.log("완료");
+            }
+        });
+    });
+
+    $('#button-addon2').click(function () {
+        let input_security_number = $('#input_security_number').val();
+
+        if (input_security_number === securityNumber) {
+            // 인증 성공
+            alert("인증 성공")
+
+            $.ajax({
+                url: "/user/Phone_Message/",
+                data: {
+                    phone_number: phone_number,
+                    datepicker: datepicker,
+                    timeSelect: timeSelect,
+                    nameInput: nameInput,
+                    birthInput: birthInput,
+                    status: "예약 완료",
+                },
+                method: "POST",
+                success: function (response) {
+                    console.log("성공");
+                    alert("입력하신 연락처를 통해 예약정보 메세지를 전송하였습니다");
+                    // 3초 대기 후에 페이지 이동
+                    setTimeout(function () {
+                        location.replace("/");
+                    }, 3000); // 3000 밀리초 (3초) 동안 대기
+                },
+                error: function (error) {
+                    console.error("Error:", error);
+                },
+                complete: function () {
+                    console.log("완료");
+                }
+            });
+        } else {
+            // 인증 실패
+            alert("인증 실패"); // .
+        }
+    });
+
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+        crossorigin="anonymous"></script>
+</body>
+</html>
