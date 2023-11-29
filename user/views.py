@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 class Main(APIView):
     def get(self, request):
         print("겟으로 호출")
+        request.session['agreed'] = False
         return render(request, "KidsLand/main.html")
 
     def post(self, request):
@@ -133,7 +134,7 @@ class Get_ReservationDB(APIView):
     def post(self, request):
         phone_number = request.data.get('phone_number', None)
         # parents_number와 phone_number가 같은 데이터 가져오기
-        matching_reservations = Reservation.objects.filter(parents_number= phone_number)
+        matching_reservations = Reservation.objects.filter(parents_number=phone_number)
 
         # 쿼리셋을 JSON 형식으로 직렬화
         data = serialize('json', matching_reservations)
@@ -143,14 +144,29 @@ class Get_ReservationDB(APIView):
         return JsonResponse(data, safe=False)
 
 
+class isOK(APIView):
+    def post(self, request):
+        agreed = request.data.get('agreed', False)  # A전송된 동의 여부 값을 가져옴
+        request.session['agreed'] = agreed  # 세션에 동의 여부 저장
+        return JsonResponse({'message': '약관 동의 여부가 업데이트되었습니다.'})
+
+
 class CheckIn(APIView):
     def get(self, request):
-        return render(request, "user/checkIn.html")
+        agreed = request.session.get('agreed', False)
+        if agreed:  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
+            request.session['agreed'] = False   # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
+            return render(request, "user/checkIn.html")
+        return render(request, "KidsLand/main.html")  # 아니면 main으로
 
 
 class CheckOut(APIView):
     def get(self, request):
-        return render(request, "user/checkOut.html")
+        agreed = request.session.get('agreed', False)
+        if agreed:  # 약관 동의가 체크 되어야만 checkOut페이지로 이동
+            request.session['agreed'] = False # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
+            return render(request, "user/checkOut.html")
+        return render(request, "KidsLand/main.html")  # 아니면 main으로
 
 
 class Check_Security_Number(APIView):

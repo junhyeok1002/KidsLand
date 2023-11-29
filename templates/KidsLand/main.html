@@ -127,8 +127,32 @@
             </ul>
         </ol>
     </div>
-
 </div>
+
+<script>
+    // 체크박스 상태가 변경되었을 때 실행되는 함수
+    $('#flexCheckIndeterminate').change(function () {
+        // 체크박스의 상태에 따라 서버에 약관 동의 여부를 전송
+        var agreed = this.checked;
+
+        // AJAX를 이용해 서버에 동의 여부 전송
+        $.ajax({
+            type: 'POST',
+            url: '/user/isOK/',
+            data: {'agreed': agreed},
+            success: function (data) {
+                console.log('약관 동의 여부가 업데이트되었습니다.');
+                // 만약 체크박스가 해제되었을 때 뒤로가기 히스토리 삭제. 뒤로가기를 악용하는 것을 방지하기 위함
+                if (!agreed) {
+                    location.replace("/")
+                }
+            },
+            error: function (error) {
+                console.error('약관 동의 여부 업데이트 실패:', error);
+            }
+        });
+    });
+</script>
 
 <ul class="list-group list-group-horizontal" style="height: 84px;border-radius: 10px 10px 0px 0px;">
     <button id="checkIn_button" class="list-group-item"
