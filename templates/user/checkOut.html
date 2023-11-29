@@ -1,11 +1,211 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <h> 준비 중 입니다.</h>
-</head>
-<body>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>키즈랜드 실내놀이터 신청확인/취소</title>
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <!-- Jquery -->
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <!-- Popper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+</head>
+<body class="container" style="max-width: 900px;display: block;padding: 0;">
+
+<div style="width: 100%; text-align: center; font-size:0.8rem; background-color: #dfd3c3; color: dimgray;
+        height: 6rem; align-items: center; justify-content: center; border-radius: 0px;">
+    <br>
+    <h3>키즈랜드 실내놀이터 신청확인/취소</h3>
+    < 대전새중앙교회 1층 웰컴카페 옆 >
+    <br>
+</div>
+<div style="margin: 0rem 0rem;">
+    <button class="btn btn-outline-secondary" type="button" id="go-home"
+            style="box-sizing: border-box; display: flex; justify-content: center;border-radius: 0px 0px 10px 10px;
+            border-color: #d3d3d3; margin: 0 auto; width: 100%; background-color: #d3d3d3; text-align: center;">
+        홈으로 돌아가기
+    </button>
+</div>
+<script>
+    $(document).ready(function () { // 버튼을 클릭했을 때 실행될 코드
+        $('#go-home').click(function () {
+            location.replace("/"); // 루트페이지 이동, 뒤로가기 못하게 브라우져 히스토리 남기지 않음
+        });
+    });
+</script>
+
+
+
+<div style="margin: 1rem 0rem;">
+    <div style="display: flex; justify-content: space-between; margin: 0 auto; width: 90%;">
+        <!-- 휴대폰 번호 입력 창 -->
+        <input type="text" class="form-control" id="phoneInput" placeholder="휴대폰 번호(-제외)">
+    </div>
+</div>
+
+<script>
+    // 휴대폰 번호 입력 창 이벤트 처리
+    document.getElementById('phoneInput').addEventListener('input', function () {
+        // 입력된 값에서 숫자만 추출하여 다시 설정
+        this.value = this.value.replace(/[^0-9]/g, '');
+
+        // 11자리까지만 입력받도록 자르기
+        this.value = this.value.slice(0, 11);
+    });
+</script>
+
+
+<button class="btn btn-outline-secondary" type="button" id="button-addon1"
+        style="box-sizing: border-box; display: flex; justify-content: center;
+        margin: 0 auto; width: 90%; background-color: #f1f3f5; text-align: center;">인증번호 전송
+</button>
+
+<div id="verificationInput" style="display: none">
+    <div style="margin: 1rem 0rem;">
+        <div class="input-security-number"
+             style="width: 90%; display: flex; justify-content: center; align-items: center; margin: 0 auto;">
+            <input type="text" class="form-control" id="input_security_number" placeholder="인증 번호를 입력해주세요!"
+                   aria-label="Recipient's username"
+                   aria-describedby="button-addon2" style=" box-sizing: border-box;">
+        </div>
+    </div>
+    <div style="margin: 1rem 0rem;">
+        <button class="btn btn-outline-secondary" type="button" id="button-addon2"
+                style="box-sizing: border-box; display: flex; justify-content: center;
+        margin: 0 auto; width: 90%; background-color: #f1f3f5; text-align: center;">인증하기
+        </button>
+    </div>
+</div>
+
+<div id="reservation-container">
+    <!-- 예약 정보가 여기에 동적으로 추가됨 -->
+</div>
+
+<script>
+    // 변수를 전역으로 선언하여 두 이벤트 핸들러에서 접근 가능하게 함
+    let phone_number;
+
+    $('#button-addon1').click(function () {
+        phone_number = $('#phoneInput').val();
+
+        if (!phone_number) {
+            alert("입력되지 않은 정보가 있습니다. 모든 정보를 입력하세요.");
+            return; // 필수 정보가 없으면 함수 종료
+        }
+
+        $.ajax({
+            url: "/user/Phone_Verification/",
+            data: {
+                phone_number: phone_number,
+            },
+            method: "POST",
+            success: function (response) {
+                console.log("성공");
+                alert("인증 번호를 보냈습니다");
+                $('#verificationInput').show();
+            },
+            error: function (error) {
+                console.error("Error:", error);
+                alert("잘못된 번호입니다.")
+            },
+            complete: function () {
+                console.log("완료");
+            }
+        });
+    });
+
+    $('#button-addon2').click(function () {
+        let input_security_number = $('#input_security_number').val();
+
+        // 데이터를 객체로 만들어서 백엔드로 전송
+        $.ajax({
+            url: "/user/check_security_number/",
+            data: {
+                input_security_number: input_security_number,
+            },
+            method: "POST",
+            success: function (response) {
+                // 백엔드에서의 인증 확인 결과에 따라 처리
+                if (response.success) {
+                    // 인증 성공
+                    alert("인증 성공");
+
+                    // 이후의 DB 예약 정보를 여기에
+                    $.ajax({
+                        url: "/user/Get_ReservationDB/",
+                        data: {
+                            phone_number: phone_number,
+                            status: "예약 확인",
+                        },
+                        dataType: 'json',
+                        method: "POST",
+                        success: function (data) {
+                            displayReservations(data);
+                        },
+                        error: function (error) {
+                            console.error("Error:", error);
+                        },
+                        complete: function () {
+                            console.log("완료");
+                        }
+                    });
+                } else {
+                    // 인증 실패
+                    alert("인증 실패");
+                }
+            },
+            error: function (error) {
+                console.error("Error:", error);
+            }
+        });
+    });
+
+    function displayReservations(reservations) {
+        // 예약 목록을 받아와서 화면에 표시
+        var reservationContainer = $('#reservation-container');
+        reservationContainer.empty();  // 이전 데이터 삭제
+
+        reservations.forEach(function (reservation) {
+            // 예약 정보를 가지고 HTML 요소 생성 및 추가
+            var reservationBox = $('<div class="reservation-box">');
+            reservationBox.html('예약 시간: ' + reservation.fields.reservation_time);
+
+            // 삭제 버튼 추가
+            var deleteButton = $('<button onclick="deleteReservation(' + reservation.pk + ')">삭제</button>');
+            reservationBox.append(deleteButton);
+
+            reservationContainer.append(reservationBox);
+        });
+    }
+
+    function deleteReservation(reservationId) {
+        // 예약 삭제를 위한 AJAX 요청 보내기
+        $.ajax({
+            type: 'POST',
+            url: '/path/to/your/delete_reservation_api/',  // 실제 API 경로로 대체해야 함
+            data: {
+                reservation_id: reservationId
+            },
+            success: function (response) {
+                // 삭제가 성공하면 예약 목록 갱신
+                getReservations();
+            },
+            error: function (error) {
+                console.log('Error:', error);
+            }
+        });
+    }
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+        crossorigin="anonymous"></script>
 </body>
 </html>

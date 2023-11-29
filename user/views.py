@@ -5,6 +5,7 @@ from datetime import datetime
 from uuid import uuid4
 
 import requests
+from django.core.serializers import serialize
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
@@ -14,7 +15,7 @@ from rest_framework.views import APIView
 # from .models import User
 from django.contrib.auth.hashers import make_password
 from KidsLand.settings import MEDIA_ROOT, API_KEY, SEND_URL, USER_ID, SEND_NUMBER
-from user.models import Reservation, SessionDB
+from user.models import Reservation, LogHistory
 
 from datetime import datetime, timedelta
 
@@ -60,18 +61,19 @@ class Phone_Verification(APIView):
 
         return Response(status=200)
 
-class Phone_Message(APIView):
+
+class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 나중에 최소기능 단위로 리팩토링하기
     def post(self, request):
         datepicker = request.data.get('datepicker', None)
         timeSelect = request.data.get('timeSelect', None)
         nameInput = request.data.get('nameInput', None)
         birthInput = request.data.get('birthInput', None)
         phone_number = request.session['phone_number']
-        status = request.data.get('status', None)
+        reserve_status = request.data.get('status', None)
 
         time_convert = {"A": "1:30-3:30", "B": "4:00-6:00"}
 
-        Message = f"[키즈랜드 {status}] {nameInput}\n{datepicker} {time_convert[timeSelect]}\n대전새중앙교회 1층 웰컴카페 옆"
+        Message = f"[키즈랜드 {reserve_status}] {nameInput}\n{datepicker} {time_convert[timeSelect]}\n대전새중앙교회 1층 웰컴카페 옆"
 
         # ================================================================== 문자 보낼 때 필수 key값
         # API key, userid, sender, receiver, msg
@@ -99,16 +101,46 @@ class Phone_Message(APIView):
         # 타임 스탬프를 년-월-일 시:분:초.마이크로초 형식으로 포맷팅합니다.
         formatted_datetime = now.strftime("%Y-%m-%d %H:%M:%S.%f")
 
-        Reservation.objects.create(timestamp=formatted_datetime,
-                                   is_OK="Ok",
-                                   child_name=nameInput,
-                                   child_birth=birthInput,
-                                   reservation_date=datepicker,
-                                   reservation_time=f'{timeSelect} {time_convert[timeSelect]}',
-                                   parents_number=phone_number,
-                                   status=status)
+        # 여기에 최종 밸리데이션 코드 넣기
+        validation = True  # 임시용 나중에 함수로 만들기
+        if validation:
+            Reservation.objects.create(timestamp=formatted_datetime,
+                                       is_OK="Ok",
+                                       child_name=nameInput,
+                                       child_birth=birthInput,
+                                       reservation_date=datepicker,
+                                       reservation_time=f'{timeSelect} {time_convert[timeSelect]}',
+                                       parents_number=phone_number,
+                                       status=reserve_status)
+        else:  # 나중에 함수 분리하고 리팩토링하면서 else 없애기
+            reason = "예약 실패 사유 메세지"  # 나중에 밸리데이션 후 예약 실패 사유메세지를 여기에
+            reserve_status = f"예약 실패_{reason}"  # 예약 실패 사유를 나중에 분석할 용도
+
+        # 로그에도 넣기
+        LogHistory.objects.create(timestamp=formatted_datetime,
+                                  is_OK="Ok",
+                                  child_name=nameInput,
+                                  child_birth=birthInput,
+                                  reservation_date=datepicker,
+                                  reservation_time=f'{timeSelect} {time_convert[timeSelect]}',
+                                  parents_number=phone_number,
+                                  status=reserve_status)
 
         return Response(status=200)
+
+
+class Get_ReservationDB(APIView):
+    def post(self, request):
+        phone_number = request.data.get('phone_number', None)
+        # parents_number와 phone_number가 같은 데이터 가져오기
+        matching_reservations = Reservation.objects.filter(parents_number= phone_number)
+
+        # 쿼리셋을 JSON 형식으로 직렬화
+        data = serialize('json', matching_reservations)
+        print(data)
+        print("type ", type(data))
+        # JsonResponse를 사용하여 클라이언트에게 응답
+        return JsonResponse(data, safe=False)
 
 
 class CheckIn(APIView):
@@ -137,7 +169,7 @@ class Check_Security_Number(APIView):
 # @method_decorator(csrf_exempt, name='dispatch')
 class GetDateInfo(APIView):
     def post(self, request, *args, **kwargs):
-        today = datetime.now()   # 현재 날짜
+        today = datetime.now()  # 현재 날짜
         disabled_dates = list()  # 안되는 날짜를 담을 리스트
         abled_dates = list()  # 되는 날짜를 담을 리스트
 
@@ -157,7 +189,7 @@ class GetDateInfo(APIView):
 
             # 오늘이라면 시간이 지났는지 여부 확인하여 닫을지 말지 여부 결정
 
-            else :
+            else:
                 formatted_day = current_day.strftime("%Y-%m-%d")
                 abled_dates.append(formatted_day)
 

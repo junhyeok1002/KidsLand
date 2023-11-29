@@ -10,7 +10,7 @@ class Reservation(models.Model):
     parents_number = models.TextField()
     status = models.TextField()
 
-class SessionDB(models.Model):
+class LogHistory(models.Model):
     timestamp = models.TextField()
     is_OK = models.TextField()
     child_name = models.TextField()

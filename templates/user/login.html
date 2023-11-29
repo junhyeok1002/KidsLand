@@ -75,7 +75,8 @@
         if (input_security_number === securityNumber) {
             // 인증 성공
             alert("인증 성공");
-            location.replace('checkIn');
+            {#location.replace('checkIn');#}
+            window.location.href = "checkIn";
         } else {
             // 인증 실패
             alert("인증 실패");

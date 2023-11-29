@@ -43,15 +43,29 @@
 
     </style>
 </head>
-<body class="container" style="max-width: 900px;">
+<body class="container" style="max-width: 900px;display: block;padding: 0;">
 
 <div style="width: 100%; text-align: center; font-size:0.8rem; background-color: #dfd3c3; color: dimgray;
-        height: 6rem; align-items: center; justify-content: center; border-radius: 10px;">
+        height: 6rem; align-items: center; justify-content: center; border-radius: 0px;">
     <br>
-    <h3>키즈랜드 실내놀이터 신청</h3>
+    <h3>키즈랜드 실내놀이터 신청확인/취소</h3>
     < 대전새중앙교회 1층 웰컴카페 옆 >
     <br>
 </div>
+<div style="margin: 0rem 0rem;">
+    <button class="btn btn-outline-secondary" type="button" id="go-home"
+            style="box-sizing: border-box; display: flex; justify-content: center;border-radius: 0px 0px 10px 10px;
+            border-color: #d3d3d3; margin: 0 auto; width: 100%; background-color: #d3d3d3; text-align: center;">
+        홈으로 돌아가기
+    </button>
+</div>
+<script>
+    $(document).ready(function () { // 버튼을 클릭했을 때 실행될 코드
+        $('#go-home').click(function () {
+            location.replace("/"); // 루트페이지 이동, 뒤로가기 못하게 브라우져 히스토리 남기지 않음
+        });
+    });
+</script>
 
 
 <div style="margin: 1rem 0rem;">
@@ -140,7 +154,7 @@
     let birthYearPrefix = '';
     // 출생년도 입력 창 이벤트 처리
     document.getElementById('birthInput').addEventListener('input', function () {
-        // 8자리까지만 입력받도록 자르기
+        // 6자리까지만 입력받도록 자르기
         this.value = this.value.slice(0, 6);
 
         // 입력된 값에서 숫자만 추출하여 다시 설정
