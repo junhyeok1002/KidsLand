@@ -150,7 +150,7 @@ class CheckIn(APIView):
 
 class CheckOut(APIView):
     def get(self, request):
-        return render(request, "user/CheckOut.html")
+        return render(request, "user/checkOut.html")
 
 
 class Check_Security_Number(APIView):
