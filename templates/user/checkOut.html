@@ -88,6 +88,7 @@
 <script>
     // 변수를 전역으로 선언하여 두 이벤트 핸들러에서 접근 가능하게 함
     let phone_number;
+    let reservations; // 전역 변수로 예약 정보를 유지
 
     document.getElementById('input_security_number').addEventListener('input', function () {
         // 입력된 값에서 숫자만 추출하여 다시 설정
@@ -97,7 +98,7 @@
     });
 
     // 페이지에 예약 정보를 표시하는 함수
-    function displayReservations(reservations) {
+    function displayReservations() {
         // 예약 정보를 표시할 컨테이너가 'reservationContainer'라 가정합니다
         var container = $('#reservationContainer');
 
@@ -138,11 +139,16 @@
             success: function (response) {
                 // 삭제가 성공하면 예약 정보를 다시 로드
                 alert("예약이 삭제되었습니다.");
-                // 예약 정보를 업데이트하는 함수를 호출합니다.
-                // 이 부분은 서버에서 새로운 예약 정보를 가져오는 방식에 맞게 수정해야 합니다.
-                // 예를 들어, 서버에 새로운 예약 정보를 요청하는 함수를 호출하거나
-                // 삭제된 예약 정보를 예약 목록에서 제거하는 등의 처리를 해야 합니다.
-                // 아래 코드는 그냥 임시로 alert를 표시하는 예시입니다.
+
+                // 삭제된 예약 정보를 예약 목록에서 제거
+                // 해당 예약을 찾아서 삭제
+                var deletedIndex = reservations.findIndex(function (reservation) {
+                    return reservation.pk === reservationId;
+                });
+                if (deletedIndex !== -1) {
+                    reservations.splice(deletedIndex, 1);
+                }
+
                 displayReservations(response);
             },
             error: function (error) {
@@ -207,7 +213,8 @@
                         dataType: 'json',
                         method: "POST",
                         success: function (data) {
-                            displayReservations(data);
+                            reservations = data; // 예약 정보를 전역 변수에 저장
+                            displayReservations();
                         },
                         error: function (error) {
                             console.error("Error:", error);
