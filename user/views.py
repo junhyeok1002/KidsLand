@@ -143,7 +143,7 @@ class Get_ReservationDB(APIView):
         return JsonResponse(data, safe=False)
 
 
-class isOK(APIView):
+class IsOK(APIView):
     def post(self, request):
         agreed = request.data.get('agreed', False)  # A전송된 동의 여부 값을 가져옴
         request.session['agreed'] = agreed  # 세션에 동의 여부 저장
