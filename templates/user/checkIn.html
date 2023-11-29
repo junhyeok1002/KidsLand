@@ -322,7 +322,12 @@
         });
     });
 
-
+    document.getElementById('input_security_number').addEventListener('input', function () {
+        // 입력된 값에서 숫자만 추출하여 다시 설정
+        this.value = this.value.replace(/[^0-9]/g, '');
+        // 6자리까지만 입력받도록 자르기
+        this.value = this.value.slice(0, 6);
+    });
 </script>
 
 

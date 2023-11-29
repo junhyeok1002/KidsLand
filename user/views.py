@@ -23,7 +23,6 @@ from datetime import datetime, timedelta
 class Main(APIView):
     def get(self, request):
         print("겟으로 호출")
-        request.session['agreed'] = False
         return render(request, "KidsLand/main.html")
 
     def post(self, request):
@@ -106,7 +105,7 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
         validation = True  # 임시용 나중에 함수로 만들기
         if validation:
             Reservation.objects.create(timestamp=formatted_datetime,
-                                       is_OK="Ok",
+                                       is_OK=request.session['agreed'],
                                        child_name=nameInput,
                                        child_birth=birthInput,
                                        reservation_date=datepicker,
@@ -119,7 +118,7 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
 
         # 로그에도 넣기
         LogHistory.objects.create(timestamp=formatted_datetime,
-                                  is_OK="Ok",
+                                  is_OK=request.session['agreed'],
                                   child_name=nameInput,
                                   child_birth=birthInput,
                                   reservation_date=datepicker,
@@ -155,7 +154,7 @@ class CheckIn(APIView):
     def get(self, request):
         agreed = request.session.get('agreed', False)
         if agreed:  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
-            request.session['agreed'] = False   # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
+            request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
             return render(request, "user/checkIn.html")
         return render(request, "KidsLand/main.html")  # 아니면 main으로
 
@@ -164,7 +163,7 @@ class CheckOut(APIView):
     def get(self, request):
         agreed = request.session.get('agreed', False)
         if agreed:  # 약관 동의가 체크 되어야만 checkOut페이지로 이동
-            request.session['agreed'] = False # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
+            request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
             return render(request, "user/checkOut.html")
         return render(request, "KidsLand/main.html")  # 아니면 main으로
 
@@ -217,3 +216,20 @@ class GetDateInfo(APIView):
             'abled_dates': abled_dates,
         }
         return JsonResponse(response_data)
+
+
+class Delete_Reservation(APIView):
+    def post(self, request):
+        reservation_id = request.data.get('reservation_id', None)
+
+        if reservation_id:
+            try:
+                reservation = Reservation.objects.get(pk=reservation_id)
+                reservation.delete()
+                return JsonResponse({'success': True, 'message': '예약이 삭제되었습니다.'})
+            except Reservation.DoesNotExist:
+                return JsonResponse({'success': False, 'message': '존재하지 않는 예약입니다.'})
+            except Exception as e:
+                return JsonResponse({'success': False, 'message': f'예약 삭제 중 오류 발생: {str(e)}'})
+
+        return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
