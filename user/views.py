@@ -23,10 +23,7 @@ from datetime import datetime, timedelta
 class Main(APIView):
     def get(self, request):
         print("겟으로 호출")
-        return render(request, "KidsLand/main.html")
-
-    def post(self, request):
-        print("포스트로 호출")
+        request.session['agreed'] = "false"
         return render(request, "KidsLand/main.html")
 
 
@@ -148,15 +145,15 @@ class Get_ReservationDB(APIView):
 
 class IsOK(APIView):
     def post(self, request):
-        agreed = request.data.get('agreed', False)  # A전송된 동의 여부 값을 가져옴
+        agreed = request.data.get('agreed', 'false')  # A전송된 동의 여부 값을 가져옴
         request.session['agreed'] = agreed  # 세션에 동의 여부 저장
         return JsonResponse({'message': '약관 동의 여부가 업데이트되었습니다.'})
 
 
 class CheckIn(APIView):
     def get(self, request):
-        agreed = request.session.get('agreed', False)
-        if agreed:  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
+        agreed = request.session.get('agreed', 'false')
+        if agreed == 'true':  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
             # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 > 가 아니고 마지막에 확인하는 것으로 변경
             return render(request, "user/checkIn.html")
         return render(request, "KidsLand/main.html")  # 아니면 main으로
@@ -165,7 +162,7 @@ class CheckIn(APIView):
 class CheckOut(APIView):
     def get(self, request):
         agreed = request.session.get('agreed', False)
-        if agreed:  # 약관 동의가 체크 되어야만 checkOut페이지로 이동
+        if agreed == 'true': # 약관 동의가 체크 되어야만 checkOut페이지로 이동
             # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 -> 가 아니고 마지막에 확인하는 것으로 변경
             return render(request, "user/checkOut.html")
         return render(request, "KidsLand/main.html")  # 아니면 main으로
