@@ -55,5 +55,4 @@
 
 # 리팩토링
 - 함수 분리 및 변수명 수정
-- html, css, js분리
-- csrf 방지 매커니즘 구현
+- html, css, js(with csrf) : static으로 분리 
