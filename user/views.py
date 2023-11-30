@@ -1,20 +1,16 @@
 # Create your views here.
 import os
 import random
-from datetime import datetime
 from uuid import uuid4
+import pytz
 
 import requests
 from django.core.serializers import serialize
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from rest_framework.views import APIView
-# from .models import User
-from django.contrib.auth.hashers import make_password
-from KidsLand.settings import MEDIA_ROOT, API_KEY, SEND_URL, USER_ID, SEND_NUMBER
+from KidsLand.settings import API_KEY, SEND_URL, USER_ID, SEND_NUMBER
 from user.models import Reservation, LogHistory
 
 from datetime import datetime, timedelta
@@ -94,15 +90,16 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
         send_response = requests.post(SEND_URL, data=sms_data)  # 요청을 던지는 URL, 현재는 문자보내기
         print(send_response.json())
 
-        # 현재 날짜와 시간을 얻습니다.
-        now = datetime.now()
-        # 현재 날짜와 시간을 포함한 타임 스탬프를 얻습니다 (년월일 시분초 마이크로초).
-        timestamp_with_microseconds = now.timestamp() + now.microsecond / 1_000_000
-        # 타임 스탬프를 년-월-일 시:분:초.마이크로초 형식으로 포맷팅합니다.
-        formatted_datetime = now.strftime("%Y-%m-%d %H:%M:%S.%f")
+        # 현재 타임 스탬프를 년-월-일 시:분:초.마이크로초 형식으로 포맷팅합니다.
+        korea_timezone = pytz.timezone("Asia/Seoul") # 한국 시간대를 설정
+        formatted_datetime = datetime.now(korea_timezone).strftime("%Y-%m-%d %H:%M:%S.%f")
 
         # 여기에 최종 밸리데이션 코드 넣기
         validation = True  # 임시용 나중에 함수로 만들기
+        if request.session['agreed'] != 'true':
+            print("동의하지 않음")
+
+        # 맞으면 문자 보내기
         if validation:
             Reservation.objects.create(timestamp=formatted_datetime,
                                        is_OK=request.session['agreed'],
@@ -184,7 +181,8 @@ class Check_Security_Number(APIView):
 # @method_decorator(csrf_exempt, name='dispatch')
 class GetDateInfo(APIView):
     def post(self, request, *args, **kwargs):
-        today = datetime.now()  # 현재 날짜
+        korea_timezone = pytz.timezone("Asia/Seoul") # 한국 시간대를 설정
+        today = datetime.now(korea_timezone)  # 현재 날짜
         disabled_dates = list()  # 안되는 날짜를 담을 리스트
         abled_dates = list()  # 되는 날짜를 담을 리스트
 
@@ -225,6 +223,20 @@ class Delete_Reservation(APIView):
         if reservation_id:
             try:
                 reservation = Reservation.objects.get(pk=reservation_id)
+                # 예약 히스토리에도 넣기
+                # 현재 타임 스탬프를 년-월-일 시:분:초.마이크로초 형식으로 포맷팅합니다.
+                korea_timezone = pytz.timezone("Asia/Seoul")  # 한국 시간대를 설정
+                formatted_datetime = datetime.now(korea_timezone).strftime("%Y-%m-%d %H:%M:%S.%f")
+
+                LogHistory.objects.create(timestamp=formatted_datetime, #현재 타임 스탬프
+                                          is_OK=reservation.is_OK ,
+                                          child_name=reservation.child_name,
+                                          child_birth=reservation.child_name,
+                                          reservation_date=reservation.reservation_date,
+                                          reservation_time=reservation.reservation_time,
+                                          parents_number=reservation.parents_number,
+                                          status=f"예약 취소_{reservation.timestamp}") #예약 당시의 타임스탬프와 함께 보관
+                # 예약 히스토리 이전 후 삭제
                 reservation.delete()
                 return JsonResponse({'success': True, 'message': '예약이 삭제되었습니다.'})
             except Reservation.DoesNotExist:
