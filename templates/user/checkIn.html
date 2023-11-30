@@ -111,8 +111,6 @@
         style="width: 90%; display: flex; justify-content: center; align-items: center; margin: 0 auto; color: #495057;"
         id="timeSelect">
     <option selected>시간을 선택하세요</option>
-    <option value="A">A타임 : 1:30-3:30(120분)</option>
-    <option value="B">B타임 : 4:00-6:00(120분)</option>
 </select>
 
 <script>
@@ -134,6 +132,50 @@
                 }).on('changeDate', function (e) {
                     // 날짜가 변경될 때 시간을 초기화 -> 날짜 별 시간의 인원수를 보여주기 위함 + 운영 안정성
                     $('#timeSelect').val("시간을 선택하세요");
+                    // 선택된 날짜 가져오기
+                    var selectedDate = e.format();
+                    var timeSelect = document.getElementById("timeSelect");
+
+                    // 기본 옵션 뺴고 지우기
+                    while (timeSelect.childNodes.length > 1) {
+                        timeSelect.removeChild(timeSelect.lastChild);
+                    }
+
+                    $.ajax({
+                        url: "/user/get_Available/",
+                        data: {
+                            selectedDate: selectedDate,
+                        },
+                        method: "POST",
+                        dataType: 'json',
+                        success: function (response) {
+                            // JavaScript로 동적으로 옵션 추가
+                            var timeSelect = document.getElementById("timeSelect");
+
+                            var dynamicOptions = [
+                                {value: "", text: "시간을 선택하세요"},
+                                {value: "A", text: "A타임 : 1:30-3:30(120분)" + response.A},
+                                {value: "B", text: "B타임 : 4:00-6:00(120분)" + response.B}
+                            ];
+
+                            dynamicOptions.forEach(function (option) {
+                                var newOption = document.createElement("option");
+                                newOption.value = option.value;
+                                newOption.text = option.text;
+                                timeSelect.add(newOption);
+                            });
+
+
+                        },
+                        error: function (error) {
+                            console.error("Error:", error);
+                        },
+                        complete: function () {
+                            console.log("완료");
+                        }
+                    });
+
+
                 }).on('show', function (e) {  // data picker 위치 정신 못차리는 거 임시로 수정
                     // datepicker가 나타날 때 스타일을 추가
                     var inputOffset = $('#datepicker').offset();
@@ -275,7 +317,7 @@
         if (age > 11 || age < 0) {
             // 출생년도가 11년 이상 지났을 때의 동작을 여기에 추가
             alert("11살까지만 입장 가능합니다.");
-            location.replace("/");
+            // location.replace("/");
             return;
         }
 
@@ -283,8 +325,13 @@
             url: "/user/Phone_Verification/",
             data: {
                 phone_number: phone_number,
+                datepicker: datepicker,
+                timeSelect: timeSelect,
+                nameInput: nameInput,
+                birthInput: birthInput,
             },
             method: "POST",
+            // dataType: 'json',
             success: function (response) {
                 console.log("성공");
                 alert("인증 번호를 보냈습니다");
@@ -292,7 +339,12 @@
             },
             error: function (error) {
                 console.error("Error:", error);
-                alert("잘못된 번호입니다.")
+                if (error.status === 400) {
+                    const errorData = JSON.parse(error.responseText);
+                    alert(errorData.message)
+                } else {
+                    alert("잘못된 번호입니다.")
+                }
             },
             complete: function () {
                 console.log("완료");

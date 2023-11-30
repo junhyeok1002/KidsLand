@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import Phone_Verification, CheckIn, Phone_Message, Check_Security_Number, CheckOut, GetDateInfo, \
-    Get_ReservationDB, IsOK, Delete_Reservation
+    Get_ReservationDB, IsOK, Delete_Reservation, Get_Available
 
 urlpatterns = [
     path('Phone_Verification/', Phone_Verification.as_view()),       # 휴대폰 인증 번호 생성 및 발신
@@ -12,4 +12,8 @@ urlpatterns = [
     path('Get_ReservationDB/', Get_ReservationDB.as_view()),         # 예약 DB정보 호출
     path('getDateInfo/', GetDateInfo.as_view()),                     # 예약 가능 날짜 정보
     path('delete_reservation/', Delete_Reservation.as_view()),       # 새로운 예약 삭제 URL 패턴
+    path('get_Available/', Get_Available.as_view()),       # 새로운 예약 삭제 URL 패턴
+
+
+
 ]
