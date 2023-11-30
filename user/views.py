@@ -11,7 +11,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from KidsLand.settings import API_KEY, SEND_URL, USER_ID, SEND_NUMBER
-from user.models import Reservation, LogHistory
+from user.models import Reservation, LogHistory, DisableDay
 
 from datetime import datetime, timedelta
 
@@ -247,18 +247,38 @@ class GetDateInfo(APIView):
         # 그러나 주말과 예약이 꽉찬 날은 예약 안됨
         for i in range(7):
             current_day = today + timedelta(days=i)
+            formatted_day = current_day.strftime("%Y-%m-%d")
+
+            # 오늘이라면 마감 시간(18시)가 지났는지 여부 확인하여 닫을지 말지 여부 결정
+            if i == 0:
+                current_time = datetime.now(korea_timezone)
+
+                # custom_datetime을 현재 날짜와 시간을 기반으로 생성하고 한국 시간대로 설정
+                temp_time = datetime(current_time.year, current_time.month, current_time.day, 18, 0)
+                custom_datetime = korea_timezone.localize(temp_time)
+
+                if custom_datetime < current_time:
+                    disabled_dates.append(formatted_day)
 
             # 주말인지 확인 (0: 월요일, 6: 일요일)
             if current_day.weekday() in (5, 6):  # 0부터 4까지가 월요일부터 금요일까지의 인덱스
-                formatted_day = current_day.strftime("%Y-%m-%d")
                 disabled_dates.append(formatted_day)
-            # 예약이 차있는지 없는지 확인하는 코드 여기에
 
-            # 오늘이라면 시간이 지났는지 여부 확인하여 닫을지 말지 여부 결정
+            # 전부 예약이 차있으면 표시 안함
+            timelist = set(Reservation.objects.values_list('reservation_time', flat=True)) #A, B타임이 들어 있음
+            check = False
+            for time in timelist:
+                reserved = Reservation.objects.filter(reservation_date=formatted_day, reservation_time=time).count()
+                if reserved < 30: check = True
+            if check == False :
+                disabled_dates.append(formatted_day)
 
-            else:
-                formatted_day = current_day.strftime("%Y-%m-%d")
-                abled_dates.append(formatted_day)
+        # 전도사님들이 관리자 페이지DB에서 안되는 날짜(공휴일, 사역)제거한 것 반영 목적
+        disable = list(set(DisableDay.objects.values_list('disable', flat=True)))
+        disabled_dates.extend(disable)
+
+        disabled_dates = list(set(disabled_dates))
+
 
         # JSON 형식으로 응답
         response_data = {
@@ -310,6 +330,6 @@ class Get_Available(APIView):
         response_data = dict()
         for time in timelist:
             reserved = Reservation.objects.filter(reservation_time=time, reservation_date=date).count()
-            response_data[time.split()[0]] = f' - {oneTimeMax - reserved}명 예약가능'
+            response_data[time.split()[0]] = oneTimeMax - reserved
 
         return Response(response_data, status=200)

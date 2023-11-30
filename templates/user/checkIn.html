@@ -149,14 +149,22 @@
                         method: "POST",
                         dataType: 'json',
                         success: function (response) {
-                            // JavaScript로 동적으로 옵션 추가
                             var timeSelect = document.getElementById("timeSelect");
 
+                            // 동적 옵션 추가 : 받아온 값을 인트로 변환 후 0명이면 표시 안하도록
                             var dynamicOptions = [
-                                {value: "", text: "시간을 선택하세요"},
-                                {value: "A", text: "A타임 : 1:30-3:30(120분)" + response.A},
-                                {value: "B", text: "B타임 : 4:00-6:00(120분)" + response.B}
+                                {value: "", text: "시간을 선택하세요"}
                             ];
+                            var aCount = parseInt(response.A, 10);
+                            var bCount = parseInt(response.B, 10);
+
+                            // 0보다 커야 옵션 표시함
+                            if (aCount > 0) {
+                                dynamicOptions.push({value: "A", text: "A타임 : 1:30-3:30(120분) - " + aCount + "명 예약가능"});
+                            }
+                            if (bCount > 0) {
+                                dynamicOptions.push({value: "B", text: "B타임 : 4:00-6:00(120분) - " + bCount + "명 예약가능"});
+                            }
 
                             dynamicOptions.forEach(function (option) {
                                 var newOption = document.createElement("option");

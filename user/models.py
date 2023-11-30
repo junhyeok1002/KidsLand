@@ -19,3 +19,6 @@ class LogHistory(models.Model):
     reservation_time = models.TextField()
     parents_number = models.TextField()
     status = models.TextField()
+
+class DisableDay(models.Model):
+    disable = models.TextField()
