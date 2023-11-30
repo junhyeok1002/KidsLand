@@ -331,10 +331,10 @@
                         success: function (response) {
                             console.log("성공");
                             alert("입력하신 연락처를 통해 예약정보 메세지를 전송하였습니다");
-                            // 3초 대기 후에 페이지 이동
+                            // 1초 대기 후에 페이지 이동
                             setTimeout(function () {
                                 location.replace("/");
-                            }, 2000); // 2000 밀리초 (2초) 동안 대기
+                            }, 1000); // 1000 밀리초 (1초) 동안 대기
                         },
                         error: function (error) {
                             console.error("Error:", error);
