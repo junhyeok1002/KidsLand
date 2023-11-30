@@ -17,6 +17,8 @@ from datetime import datetime, timedelta
 
 # 전역 변수
 oneTimeMax = 30
+timelist = {"A 1:30-3:30", "B 4:00-6:00"} #set으로 설정
+
 
 # 전역 함수
 def update_ReservationDB(): # 예약현황 디비 업데이트 함수
@@ -286,7 +288,7 @@ class GetDateInfo(APIView):
         end_date = (today + timedelta(days=7)).strftime("%Y-%m-%d")
 
         # 그러나 주말과 예약이 꽉찬 날은 예약 안됨
-        for i in range(7):
+        for i in range(8): # 오늘 부터 7일 뒤까지
             current_day = today + timedelta(days=i)
             formatted_day = current_day.strftime("%Y-%m-%d")
 
@@ -305,15 +307,15 @@ class GetDateInfo(APIView):
             if current_day.weekday() in (5, 6):  # 0부터 4까지가 월요일부터 금요일까지의 인덱스
                 disabled_dates.append(formatted_day)
 
-            # 전부 예약이 차있으면 표시 안함
-            timelist = set(Reservation.objects.values_list('reservation_time', flat=True)) #A, B타임이 들어 있음
             check = False
             for time in timelist:
                 reserved = Reservation.objects.filter(reservation_date=formatted_day, reservation_time=time).count()
                 if reserved < oneTimeMax: check = True
             if check == False :
                 disabled_dates.append(formatted_day)
+            print(i, disabled_dates)
 
+        print(disabled_dates)
         # 전도사님들이 관리자 페이지DB에서 안되는 날짜(공휴일, 사역)제거한 것 반영 목적
         disable = list(set(DisableDay.objects.values_list('disable', flat=True)))
         disabled_dates.extend(disable)
@@ -366,10 +368,6 @@ class Get_Available(APIView):
         # 데이터 받아와서 연월일 분리
         date = request.data.get('selectedDate', None)
         year, month, day = [int(i) for i in date.split("-")]
-
-        # 예약 타임 목록 가져오기
-        timelist = Reservation.objects.values_list('reservation_time', flat=True)
-        timelist = set(timelist)
 
         # 그 날의 예약타임을 돌면서 예약가능 인원 확인하기
         response_data = dict()

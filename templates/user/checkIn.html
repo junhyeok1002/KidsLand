@@ -172,8 +172,6 @@
                                 newOption.text = option.text;
                                 timeSelect.add(newOption);
                             });
-
-
                         },
                         error: function (error) {
                             console.error("Error:", error);
@@ -182,8 +180,6 @@
                             console.log("완료");
                         }
                     });
-
-
                 }).on('show', function (e) {  // data picker 위치 정신 못차리는 거 임시로 수정
                     // datepicker가 나타날 때 스타일을 추가
                     var inputOffset = $('#datepicker').offset();
