@@ -157,7 +157,7 @@ class CheckIn(APIView):
     def get(self, request):
         agreed = request.session.get('agreed', False)
         if agreed:  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
-            request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
+            # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 > 가 아니고 마지막에 확인하는 것으로 변경
             return render(request, "user/checkIn.html")
         return render(request, "KidsLand/main.html")  # 아니면 main으로
 
@@ -166,7 +166,7 @@ class CheckOut(APIView):
     def get(self, request):
         agreed = request.session.get('agreed', False)
         if agreed:  # 약관 동의가 체크 되어야만 checkOut페이지로 이동
-            request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지
+            # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 -> 가 아니고 마지막에 확인하는 것으로 변경
             return render(request, "user/checkOut.html")
         return render(request, "KidsLand/main.html")  # 아니면 main으로
 
