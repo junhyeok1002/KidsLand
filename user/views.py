@@ -15,12 +15,49 @@ from user.models import Reservation, LogHistory, DisableDay
 
 from datetime import datetime, timedelta
 
+# 전역 변수
+oneTimeMax = 30
+
+# 전역 함수
+def update_ReservationDB(): # 예약현황 디비 업데이트 함수
+    # 어제(전날 이전)까지의 예약 정보는 디비에서 삭제(최신화)
+    ktz = pytz.timezone('Asia/Seoul')  # 한국 시간
+    current_time = datetime.now(ktz)  # 현재 시간 타입
+    current_date_str = current_time.strftime("%Y-%m-%d")  # 시간을 문자열 포멧팅
+    reservations_to_delete = Reservation.objects.filter(reservation_date__lt=current_date_str)  # 어제 이전은 삭제
+    print("어제 것 삭제", reservations_to_delete.count())  # 개수 확인용 출력
+    reservations_to_delete.delete()
+
+    # 오늘까지의 예약은 현재 시간에 맞추어 디비에서 삭제(최신화)
+    year, month, day = [int(i) for i in current_date_str.split("-")]  # 현재 시간 구하기
+
+    # A,B마감 시간과 비교하여, 지났으면 오늘이라도 해당 시간을 닫어버림.
+    today_A = ktz.localize(datetime(year, month, day, 15, 30))
+    if today_A < current_time:  # A타임이 지났으므로
+        reservations_to_delete_A = Reservation.objects.filter(reservation_date=current_date_str,  # 오늘 것 중에
+                                                              reservation_time__startswith='A')  # A로 시작하는 것 삭제
+        print("오늘 A타임 삭제", reservations_to_delete_A.count())  # 개수 확인용 출력
+        reservations_to_delete_A.delete()
+
+    today_B = ktz.localize(datetime(year, month, day, 18, 00))
+    if today_B < current_time:  # B타임이 지났으므로
+        reservations_to_delete_B = Reservation.objects.filter(reservation_date=current_date_str,  # 오늘 것 중에
+                                                              reservation_time__startswith='B')  # B로 시작하는 것 삭제
+        print("오늘 B타임 삭제", reservations_to_delete_B.count())  # 개수 확인용 출력
+        reservations_to_delete_B.delete()
 
 class Main(APIView):
     def get(self, request):
         print("겟으로 호출")
+
+        # 초기 세팅 1 : 동의 여부 - 안함
         request.session['agreed'] = "false"
+
+        # 초기 세팅 2 : 시간이 지난 예약은 자동으로 삭제
+        update_ReservationDB()
+
         return render(request, "KidsLand/main.html")
+
 
 
 class Phone_Verification(APIView):
@@ -157,6 +194,11 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
         korea_timezone = pytz.timezone("Asia/Seoul")  # 한국 시간대를 설정
         formatted_datetime = datetime.now(korea_timezone).strftime("%Y-%m-%d %H:%M:%S.%f")
 
+        # 이 타이밍 : 예약 추가 직전에 그 사이에 누군가가 예약했다는 것을
+        last_check = Reservation.objects.filter(reservation_date=datepicker, reservation_time=f'{timeSelect} {time_convert[timeSelect]}')
+        if last_check.count() >= oneTimeMax:
+            return Response(status=400)
+
         # 예약 현황 넣기
         Reservation.objects.create(timestamp=formatted_datetime,
                                    is_OK=request.session['agreed'],
@@ -269,7 +311,7 @@ class GetDateInfo(APIView):
             check = False
             for time in timelist:
                 reserved = Reservation.objects.filter(reservation_date=formatted_day, reservation_time=time).count()
-                if reserved < 30: check = True
+                if reserved < oneTimeMax: check = True
             if check == False :
                 disabled_dates.append(formatted_day)
 
@@ -322,14 +364,34 @@ class Delete_Reservation(APIView):
 
 class Get_Available(APIView):
     def post(self, request):
+        # 데이터 받아와서 연월일 분리
         date = request.data.get('selectedDate', None)
-        oneTimeMax = 30
+        year, month, day = [int(i) for i in date.split("-")]
+
+        # 예약 타임 목록 가져오기
         timelist = Reservation.objects.values_list('reservation_time', flat=True)
         timelist = set(timelist)
 
+        # 그 날의 예약타임을 돌면서 예약가능 인원 확인하기
         response_data = dict()
         for time in timelist:
             reserved = Reservation.objects.filter(reservation_time=time, reservation_date=date).count()
             response_data[time.split()[0]] = oneTimeMax - reserved
 
+        # 현재 시간 구하기
+        korea_timezone = pytz.timezone("Asia/Seoul")
+        current_time = datetime.now(korea_timezone)
+
+        # A,B마감 시간과 비교하여, 지났으면 오늘이라도 해당 시간을 닫어버림.
+        today_A = korea_timezone.localize(datetime(year, month, day, 15, 30))
+        if today_A < current_time:
+            response_data['A'] = 0
+
+        today_B = korea_timezone.localize(datetime(year, month, day, 18, 00))
+        if today_B < current_time:
+            response_data['B'] = 0
+
         return Response(response_data, status=200)
+
+
+
