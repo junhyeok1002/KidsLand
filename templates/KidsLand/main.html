@@ -148,11 +148,12 @@
 
         // AJAX를 이용해 서버에 동의 여부 전송
         $.ajax({
-            url: '/user/isOK/',
-            method: "POST",
+            url: "/user/isOK/",
             data: {'agreed': agreed},
+            method: "POST",
+            dataType: 'json',
             success: function (data) {
-                console.log('약관 동의 여부가 업데이트되었습니다.');
+                console.log("약관 동의 여부가 업데이트되었습니다.");
                 // 만약 체크박스가 해제되었을 때 뒤로가기 히스토리 삭제. 뒤로가기를 악용하는 것을 방지하기 위함
                 if (!agreed) {
                     alert("약관 동의를 취소합니다.")
@@ -160,7 +161,7 @@
                 }
             },
             error: function (error) {
-                console.error('약관 동의 여부 업데이트 실패:', error);
+                console.error("약관 동의 여부 업데이트 실패:", error);
             }
         });
     });
