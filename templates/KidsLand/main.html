@@ -1,4 +1,4 @@
-<!doctype html>a
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -148,8 +148,8 @@
 
         // AJAX를 이용해 서버에 동의 여부 전송
         $.ajax({
-            type: 'POST',
             url: '/user/isOK/',
+            method: "POST",
             data: {'agreed': agreed},
             success: function (data) {
                 console.log('약관 동의 여부가 업데이트되었습니다.');
