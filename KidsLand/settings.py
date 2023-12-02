@@ -13,6 +13,8 @@ import os
 from pathlib import Path
 from decouple import config
 
+from user.models import Admin_Phone
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -138,6 +140,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 API_KEY = config('API_KEY')
 SEND_URL = config('SEND_URL')
 USER_ID = config('USER_ID')
-SEND_NUMBER = config('SEND_NUMBER')
+
+# 전송 번호 처리
+last_admin_phone = Admin_Phone.objects.last()
+if last_admin_phone: # 디비에 있으면
+    SEND_NUMBER = last_admin_phone.number
+else:                # 디비에 없으면
+    SEND_NUMBER = config('SEND_NUMBER')  # 환경 변수로 넣기
+
+
 
 
