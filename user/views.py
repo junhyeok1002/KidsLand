@@ -285,7 +285,7 @@ class GetDateInfo(APIView):
 
         # 오늘부터 7일 뒤까지 예약 가능
         start_date = today.strftime("%Y-%m-%d")
-        end_date = (today + timedelta(days=7)).strftime("%Y-%m-%d")
+        end_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
 
         # 그러나 주말과 예약이 꽉찬 날은 예약 안됨
         for i in range(8): # 오늘 부터 7일 뒤까지
