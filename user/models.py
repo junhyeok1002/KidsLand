@@ -22,3 +22,6 @@ class LogHistory(models.Model):
 
 class DisableDay(models.Model):
     disable = models.TextField()
+
+class admin_Phone(models.Model):
+    numbers = models.TextField()

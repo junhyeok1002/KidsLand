@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 # 전역 변수
 oneTimeMax = 30
 timelist = {"A 1:30-3:30", "B 4:00-6:00"} #set으로 설정
+afterNdays = 30
 
 
 # 전역 함수
@@ -285,10 +286,10 @@ class GetDateInfo(APIView):
 
         # 오늘부터 7일 뒤까지 예약 가능
         start_date = today.strftime("%Y-%m-%d")
-        end_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
+        end_date = (today + timedelta(days=afterNdays)).strftime("%Y-%m-%d")
 
         # 그러나 주말과 예약이 꽉찬 날은 예약 안됨
-        for i in range(8): # 오늘 부터 7일 뒤까지
+        for i in range(afterNdays+1): # 오늘 부터 7일 뒤까지
             current_day = today + timedelta(days=i)
             formatted_day = current_day.strftime("%Y-%m-%d")
 
