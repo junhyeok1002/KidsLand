@@ -23,5 +23,8 @@ class LogHistory(models.Model):
 class DisableDay(models.Model):
     disable = models.TextField()
 
-class admin_Phone(models.Model):
-    numbers = models.TextField()
+class Admin_Phone(models.Model):
+    number = models.TextField()
+
+class Agree_Term(models.Model):
+    term = models.TextField()
