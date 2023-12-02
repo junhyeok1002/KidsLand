@@ -349,7 +349,7 @@ class Delete_Reservation(APIView):
                 LogHistory.objects.create(timestamp=formatted_datetime,  # 현재 타임 스탬프
                                           is_OK=reservation.is_OK,
                                           child_name=reservation.child_name,
-                                          child_birth=reservation.child_name,
+                                          child_birth=reservation.child_birth,
                                           reservation_date=reservation.reservation_date,
                                           reservation_time=reservation.reservation_time,
                                           parents_number=reservation.parents_number,
