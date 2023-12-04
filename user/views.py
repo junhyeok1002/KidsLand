@@ -28,6 +28,8 @@ def change_SEND_NUMBER():
         last_admin_phone = Admin_Phone.objects.last()
         if last_admin_phone:  # 디비에 있으면
             SEND_NUMBER = last_admin_phone.number
+        else:
+            SEND_NUMBER = SEND_NUMBER  # 호출 시 마다 다시 갱신하여 DB수정 시 uginx, uwsgi를 재시작하지 않아도 되게끔하는 목적
     except Exception as e:
         print(e)
 
