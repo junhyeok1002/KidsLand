@@ -57,8 +57,6 @@ INSTALLED_APPS = [
     "user",
     'import_export',
     "KidsLand",
-    # 'bootstrap4',
-    # 'posts',
 ]
 
 MIDDLEWARE = [

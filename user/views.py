@@ -11,7 +11,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from KidsLand.settings import API_KEY, SEND_URL, USER_ID, SEND_NUMBER
-from user.models import Reservation, LogHistory, DisableDay, Admin_Phone
+from user.models import Reservation, LogHistory, DisableDay, Admin_Phone, Agree_Term
 
 from datetime import datetime, timedelta
 
@@ -60,6 +60,22 @@ def update_ReservationDB():  # 예약현황 디비 업데이트 함수
         print("오늘 B타임 삭제", reservations_to_delete_B.count())  # 개수 확인용 출력
         reservations_to_delete_B.delete()
 
+def get_Agree_terms():
+    # 빈 리스트 생성
+    items = list()
+
+    # 약관 데이터 베이스에서 최신 약관을 불러옴
+    last_agree_term = Agree_Term.objects.last().term
+
+    # 줄바꿈 기준으로 나누어서 리스트 안에 사전을 넣어 반환
+    terms = last_agree_term.split("\n")
+    terms = [term for term in terms if term.strip()] # 좌우 공백 제거
+
+    for i,j in enumerate(terms):
+        temp = {'number': i+1, 'content': j.strip()}
+        items.append(temp)
+    return items
+
 
 class Main(APIView):
     def get(self, request):
@@ -71,7 +87,10 @@ class Main(APIView):
         # 초기 세팅 2 : 시간이 지난 예약은 자동으로 삭제
         update_ReservationDB()
 
-        return render(request, "KidsLand/main.html")
+        # 초기 세팅 3 : 최신 약관 불러오기
+        items = get_Agree_terms()
+
+        return render(request, "KidsLand/main.html", {'items': items})
 
 
 class Phone_Verification(APIView):
