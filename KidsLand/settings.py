@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 """
 Django settings for KidsLand project.
 
@@ -12,10 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import socket
 from pathlib import Path
 from decouple import config
-
-from user.models import Admin_Phone
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,11 +20,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
+# 배포 시에 주의할 부분들
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-09!e_ce45^8$o*!51wnxxatlf^@33@pffm%-3$nkl%&ig=i^+("
-
+SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = False  # 로컬 프로젝트에서는 켜기/배포시에 끄기
+
+if DEBUG == False:
+    # 디버그 모드가 아닐때는 SSL 인증으로 실행
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year in seconds
+else:
+    # 디버그 모드에서만 SSL 인증 없이 실행
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+    SECURE_HSTS_SECONDS = 0  # Disable HSTS in local environment
 
 ALLOWED_HOSTS = ['*']
 
@@ -111,13 +125,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "ko"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"  # 설치된 곳의 time zone을 나타낸다. 반드시 서버의 시간대는 아니다. 하나의 서버가 각각 별도의 시간대 설정이 있는 장고 기반 사이트를 제공할 수 있다.
 
-USE_I18N = True
+USE_I18N = True  # 장고의 번역 시스템을 활성화 하는지의 여부이다.
 
-USE_L10N = True
+USE_L10N = True  # locaization된 데이터 형식을 활성화하는지 안하는지의 여부이다. True라면, 장고는 현재 위치에 맞춰진 숫자와 날짜를 보여준다.
 
-USE_TZ = True
+USE_TZ = True  # True면, 장고는 내부적으로 날짜 / 시간을 사용한다
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -142,15 +156,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 API_KEY = config('API_KEY')
 SEND_URL = config('SEND_URL')
 USER_ID = config('USER_ID')
-
-# 전송 번호 처리
-last_admin_phone = Admin_Phone.objects.last()
-if last_admin_phone: # 디비에 있으면
-    SEND_NUMBER = last_admin_phone.number
-else:                # 디비에 없으면
-    SEND_NUMBER = config('SEND_NUMBER')  # 환경 변수로 넣기
-
-
-
-
->>>>>>> 89abd70d15843f7d98d46e6b50f7990c1eeca5b9
+SEND_NUMBER = config('SEND_NUMBER')
