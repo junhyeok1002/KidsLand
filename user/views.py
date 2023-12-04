@@ -11,7 +11,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from KidsLand.settings import API_KEY, SEND_URL, USER_ID, SEND_NUMBER
-from user.models import Reservation, LogHistory, DisableDay
+from user.models import Reservation, LogHistory, DisableDay, Admin_Phone
 
 from datetime import datetime, timedelta
 
@@ -19,7 +19,10 @@ from datetime import datetime, timedelta
 oneTimeMax = 30
 timelist = {"A 1:30-3:30", "B 4:00-6:00"} #set으로 설정
 afterNdays = 30
-
+# 전송 번호 처리 : 디비에 없으면 부목사님 번호로 기본 전송, 디비에 설정 하면 마지막 입력된 번호로 전송
+last_admin_phone = Admin_Phone.objects.last()
+if last_admin_phone: # 디비에 있으면
+    SEND_NUMBER = last_admin_phone.number
 
 # 전역 함수
 def update_ReservationDB(): # 예약현황 디비 업데이트 함수
