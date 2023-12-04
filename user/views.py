@@ -20,15 +20,17 @@ oneTimeMax = 30
 timelist = {"A 1:30-3:30", "B 4:00-6:00"}  # set으로 설정
 afterNdays = 30
 
-# 전송 번호 처리 : 디비에 없으면 부목사님 번호로 기본 전송, 디비에 설정 하면 마지막 입력된 번호로 전송
-try:
-    last_admin_phone = Admin_Phone.objects.last()
-    if last_admin_phone:  # 디비에 있으면
-        SEND_NUMBER = last_admin_phone.number
-except Exception as e:
-    print(e)
-
 # 전역 함수
+def change_SEND_NUMBER():
+    global SEND_NUMBER
+    # 전송 번호 처리 : 디비에 없으면 부목사님 번호로 기본 전송, 디비에 설정 하면 마지막 입력된 번호로 전송
+    try:
+        last_admin_phone = Admin_Phone.objects.last()
+        if last_admin_phone:  # 디비에 있으면
+            SEND_NUMBER = last_admin_phone.number
+    except Exception as e:
+        print(e)
+
 def update_ReservationDB():  # 예약현황 디비 업데이트 함수
     # 어제(전날 이전)까지의 예약 정보는 디비에서 삭제(최신화)
     ktz = pytz.timezone('Asia/Seoul')  # 한국 시간
@@ -144,6 +146,7 @@ class Phone_Verification(APIView):
         # ================================================================== 문자 보낼 때 필수 key값
         # API key, userid, sender, receiver, msg
         # API키, 알리고 사이트 아이디, 발신번호, 수신번호, 문자내용
+        change_SEND_NUMBER() # 발신 번호가 DB에 있으면 가져오는 함수
         sms_data = {'key': API_KEY,  # api key
                     'userid': USER_ID,  # 알리고 사이트 아이디
                     'sender': SEND_NUMBER,  # 발신번호
@@ -183,6 +186,7 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
         # API key, userid, sender, receiver, msg
         # API키, 알리고 사이트 아이디, 발신번호, 수신번호, 문자내용
 
+        change_SEND_NUMBER()  # 발신 번호가 DB에 있으면 가져오는 함수
         sms_data = {'key': API_KEY,  # api key
                     'userid': USER_ID,  # 알리고 사이트 아이디
                     'sender': SEND_NUMBER,  # 발신번호
