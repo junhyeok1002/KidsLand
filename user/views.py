@@ -17,15 +17,19 @@ from datetime import datetime, timedelta
 
 # 전역 변수
 oneTimeMax = 30
-timelist = {"A 1:30-3:30", "B 4:00-6:00"} #set으로 설정
+timelist = {"A 1:30-3:30", "B 4:00-6:00"}  # set으로 설정
 afterNdays = 30
+
 # 전송 번호 처리 : 디비에 없으면 부목사님 번호로 기본 전송, 디비에 설정 하면 마지막 입력된 번호로 전송
-last_admin_phone = Admin_Phone.objects.last()
-if last_admin_phone: # 디비에 있으면
-    SEND_NUMBER = last_admin_phone.number
+try:
+    last_admin_phone = Admin_Phone.objects.last()
+    if last_admin_phone:  # 디비에 있으면
+        SEND_NUMBER = last_admin_phone.number
+except Exception as e:
+    print(e)
 
 # 전역 함수
-def update_ReservationDB(): # 예약현황 디비 업데이트 함수
+def update_ReservationDB():  # 예약현황 디비 업데이트 함수
     # 어제(전날 이전)까지의 예약 정보는 디비에서 삭제(최신화)
     ktz = pytz.timezone('Asia/Seoul')  # 한국 시간
     current_time = datetime.now(ktz)  # 현재 시간 타입
@@ -52,6 +56,7 @@ def update_ReservationDB(): # 예약현황 디비 업데이트 함수
         print("오늘 B타임 삭제", reservations_to_delete_B.count())  # 개수 확인용 출력
         reservations_to_delete_B.delete()
 
+
 class Main(APIView):
     def get(self, request):
         print("겟으로 호출")
@@ -65,7 +70,6 @@ class Main(APIView):
         return render(request, "KidsLand/main.html")
 
 
-
 class Phone_Verification(APIView):
     def post(self, request):
         phone_number = request.data.get('phone_number', None)
@@ -74,8 +78,8 @@ class Phone_Verification(APIView):
         request.session['phone_number'] = phone_number
 
         response_data = {"message": ""}
-        try: # try 구문은 checkIn page를 위함
-             # 변수 선언 부분에서 checkOut페이지는 예외발생함.
+        try:  # try 구문은 checkIn page를 위함
+            # 변수 선언 부분에서 checkOut페이지는 예외발생함.
             datepicker = request.data['datepicker']
             nameInput = request.data['nameInput']
             birthInput = request.data['birthInput']
@@ -89,14 +93,15 @@ class Phone_Verification(APIView):
                 return Response(response_data, status=400)
 
             # validation2 : 한아이가 하루에 1타임만 -> 아이식별(아이이름, 생년월일, 부모님전화번호) 그리고 예약 날짜가 같은 건수가 1건도 없는지
-            try: # 매칭되는 게 없을 때 넘어가기 용도
+            try:  # 매칭되는 게 없을 때 넘어가기 용도
                 matching = Reservation.objects.filter(parents_number=phone_number,
                                                       child_name=nameInput,
                                                       child_birth=birthInput,
                                                       reservation_date=datepicker)
-                already = matching.first().reservation_time #매칭되는 것이 없으면 여기서 예외 발생
-                if (matching.count() > 0): #매칭이 되면서 그 이전의 예약건수가 하나라도 있으면 실행
-                    response_data["message"] = f"""한 아이당 하루에 한 타임만 이용할 수 있습니다.\n해당 아이는 {datepicker} {already}타임에 이미 예약되어 있습니다."""
+                already = matching.first().reservation_time  # 매칭되는 것이 없으면 여기서 예외 발생
+                if (matching.count() > 0):  # 매칭이 되면서 그 이전의 예약건수가 하나라도 있으면 실행
+                    response_data[
+                        "message"] = f"""한 아이당 하루에 한 타임만 이용할 수 있습니다.\n해당 아이는 {datepicker} {already}타임에 이미 예약되어 있습니다."""
                     print(response_data["message"])
                     return Response(response_data, status=400)
             except Exception as e:
@@ -133,8 +138,6 @@ class Phone_Verification(APIView):
                 response_data["message"] = f"약관에 동의하지 않았습니다. 다시 처음부터 신청해주십시오."
                 print(response_data["message"])
                 return Response(response_data, status=400)
-
-
         except Exception as e:
             print(e)
 
@@ -200,7 +203,8 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
         formatted_datetime = datetime.now(korea_timezone).strftime("%Y-%m-%d %H:%M:%S.%f")
 
         # 이 타이밍 : 예약 추가 직전에 그 사이에 누군가가 예약했다는 것을
-        last_check = Reservation.objects.filter(reservation_date=datepicker, reservation_time=f'{timeSelect} {time_convert[timeSelect]}')
+        last_check = Reservation.objects.filter(reservation_date=datepicker,
+                                                reservation_time=f'{timeSelect} {time_convert[timeSelect]}')
         if last_check.count() >= oneTimeMax:
             return Response(status=400)
 
@@ -292,7 +296,7 @@ class GetDateInfo(APIView):
         end_date = (today + timedelta(days=afterNdays)).strftime("%Y-%m-%d")
 
         # 그러나 주말과 예약이 꽉찬 날은 예약 안됨
-        for i in range(afterNdays+1): # 오늘 부터 7일 뒤까지
+        for i in range(afterNdays + 1):  # 오늘 부터 7일 뒤까지
             current_day = today + timedelta(days=i)
             formatted_day = current_day.strftime("%Y-%m-%d")
 
@@ -315,7 +319,7 @@ class GetDateInfo(APIView):
             for time in timelist:
                 reserved = Reservation.objects.filter(reservation_date=formatted_day, reservation_time=time).count()
                 if reserved < oneTimeMax: check = True
-            if check == False :
+            if check == False:
                 disabled_dates.append(formatted_day)
             print(i, disabled_dates)
 
@@ -325,7 +329,6 @@ class GetDateInfo(APIView):
         disabled_dates.extend(disable)
 
         disabled_dates = list(set(disabled_dates))
-
 
         # JSON 형식으로 응답
         response_data = {
@@ -367,6 +370,7 @@ class Delete_Reservation(APIView):
 
         return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
 
+
 class Get_Available(APIView):
     def post(self, request):
         # 데이터 받아와서 연월일 분리
@@ -393,6 +397,3 @@ class Get_Available(APIView):
             response_data['B'] = 0
 
         return Response(response_data, status=200)
-
-
-
