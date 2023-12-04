@@ -14,6 +14,8 @@ import socket
 from pathlib import Path
 from decouple import config
 
+from user.models import Admin_Phone
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # 로컬 프로젝트에서는 켜기/배포시에 끄기
+DEBUG = False  # 로컬 프로젝트에서는 True /배포시에 False
 
 if DEBUG == False:
     # 디버그 모드가 아닐때는 SSL 인증으로 실행
@@ -156,4 +158,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 API_KEY = config('API_KEY')
 SEND_URL = config('SEND_URL')
 USER_ID = config('USER_ID')
-SEND_NUMBER = config('SEND_NUMBER')
+
+# 전송 번호 처리 : 디비에 없으면 부목사님 번호로 기본 전송, 디비에 설정 하면 마지막 입력된 번호로 전송
+last_admin_phone = Admin_Phone.objects.last()
+if last_admin_phone: # 디비에 있으면
+    SEND_NUMBER = last_admin_phone.number
+else:                # 디비에 없으면
+    SEND_NUMBER = config('SEND_NUMBER')  # 환경 변수로 넣기
