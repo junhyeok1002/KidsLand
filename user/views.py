@@ -79,7 +79,7 @@ def get_Agree_terms():
 
 class Main(APIView):
     def get(self, request):
-        print("겟으로 호출")
+        print("Main 호출 : get")
 
         # 초기 세팅 1 : 동의 여부 - 안함
         request.session['agreed'] = "false"
@@ -95,17 +95,19 @@ class Main(APIView):
 
 class Phone_Verification(APIView):
     def post(self, request):
+        print("Phone_Verification 호출 : post")
         phone_number = request.data.get('phone_number', None)
         security_number = str(random.randint(0, 999999)).zfill(6)
         request.session['security_number'] = security_number
         request.session['phone_number'] = phone_number
+        print(request.data)
 
         response_data = {"message": ""}
         try:  # try 구문은 checkIn page를 위함
             # 변수 선언 부분에서 checkOut페이지는 예외발생함.
             datepicker = request.data['datepicker']
-            nameInput = request.data['nameInput']
-            birthInput = request.data['birthInput']
+            nameInput = request.data['nameInput[]']
+            birthInput = request.data['birthInput[]']
 
             # 나중에 데이터 픽커 수정할떄 ->  날짜 지난 거 없앴는지 체크해서 reservation 수정
 
@@ -146,6 +148,10 @@ class Phone_Verification(APIView):
                     result = True
                 else:
                     result = False
+
+
+
+
             except ValueError:
                 result = False
 
@@ -155,14 +161,30 @@ class Phone_Verification(APIView):
                 print(response_data["message"])
                 return Response(response_data, status=400)
 
-            # validation4 : 약관에 동의했는가?
+            # validation4 : 나이가 맞는가?
+            else:
+                birthYear = int(str(birthInput)[:2])
+
+                # 현재 날짜와 시간을 한국 시간대로 가져온 후, 년도를 뒤에 두 글자만 문자열로 만들기
+                current_datetime = datetime.now(pytz.timezone('Asia/Seoul'))
+                CurrentYear = int(current_datetime.year % 100)
+
+                age = CurrentYear - birthYear + 1
+                if age > 11 or age < 0:
+                    # 출생년도가 11년 이상 지났을 때
+                    response_data["message"] = "11살까지만 입장 가능합니다."
+                    print(response_data["message"])
+                    return Response(response_data, status=400)
+
+            # validation5 : 약관에 동의했는가?
             print(request.session['agreed'])
             if request.session['agreed'] != 'true':
                 response_data["message"] = f"약관에 동의하지 않았습니다. 다시 처음부터 신청해주십시오."
                 print(response_data["message"])
                 return Response(response_data, status=400)
+
         except Exception as e:
-            print(e)
+            print(f"An exception occurred: {str(e)}")
 
         # ================================================================== 문자 보낼 때 필수 key값
         # API key, userid, sender, receiver, msg
@@ -182,20 +204,24 @@ class Phone_Verification(APIView):
                     }
 
         # 잘못된 번호입니다 처리 가능할듯?? -> 추후 리팩토링
-        send_response = requests.post(SEND_URL, data=sms_data)  # 요청을 던지는 URL, 현재는 문자보내기
-        if send_response.json()['message'] != 'success':
-            print(send_response.json())
-            return Response(status=500)
+
+        # 임시수정 : 폰인증
+        # send_response = requests.post(SEND_URL, data=sms_data)  # 요청을 던지는 URL, 현재는 문자보내기
+        # if send_response.json()['message'] != 'success':
+        #     print(send_response.json())
+        #     return Response(status=500)
 
         return Response(response_data, status=200)
 
 
 class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 나중에 최소기능 단위로 리팩토링하기
     def post(self, request):
+        print("Phone_Message 호출 : post")
+
         datepicker = request.data.get('datepicker', None)
         timeSelect = request.data.get('timeSelect', None)
-        nameInput = request.data.get('nameInput', None)
-        birthInput = request.data.get('birthInput', None)
+        nameInput = request.data.get('nameInput[]', None)
+        birthInput = request.data.get('birthInput[]', None)
         phone_number = request.session['phone_number']
         reserve_status = request.data.get('status', None)
 
@@ -220,8 +246,10 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
                     # 'rtime' : '예약시간',
                     # 'testmode_yn' : '' #테스트모드 적용 여부 Y/N
                     }
-        send_response = requests.post(SEND_URL, data=sms_data)  # 요청을 던지는 URL, 현재는 문자보내기
-        print(send_response.json())
+
+        # 임시수정 : 폰인증
+        # send_response = requests.post(SEND_URL, data=sms_data)  # 요청을 던지는 URL, 현재는 문자보내기
+        # print(send_response.json())
 
         # 현재 타임 스탬프를 년-월-일 시:분:초.마이크로초 형식으로 포맷팅합니다.
         korea_timezone = pytz.timezone("Asia/Seoul")  # 한국 시간대를 설정
@@ -258,6 +286,8 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
 
 class Get_ReservationDB(APIView):
     def post(self, request):
+        print("Get_ReservationDB 호출 : post")
+
         phone_number = request.data.get('phone_number', None)
         # parents_number와 phone_number가 같은 데이터 가져오기
         matching_reservations = Reservation.objects.filter(parents_number=phone_number)
@@ -272,6 +302,8 @@ class Get_ReservationDB(APIView):
 
 class IsOK(APIView):
     def post(self, request):
+        print("IsOK 호출 : post")
+
         agreed = request.data.get('agreed', 'false')  # A전송된 동의 여부 값을 가져옴
         request.session['agreed'] = agreed  # 세션에 동의 여부 저장
         return JsonResponse({'message': '약관 동의 여부가 업데이트되었습니다.'})
@@ -279,6 +311,7 @@ class IsOK(APIView):
 
 class CheckIn(APIView):
     def get(self, request):
+        print("CheckIn 호출 : get")
         agreed = request.session.get('agreed', 'false')
         if agreed == 'true':  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
             # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 > 가 아니고 마지막에 확인하는 것으로 변경
@@ -292,6 +325,8 @@ class CheckIn(APIView):
 
 class CheckOut(APIView):
     def get(self, request):
+        print("CheckOut 호출 : get")
+
         agreed = request.session.get('agreed', False)
         if agreed == 'true':  # 약관 동의가 체크 되어야만 checkOut페이지로 이동
             # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 -> 가 아니고 마지막에 확인하는 것으로 변경
@@ -301,12 +336,16 @@ class CheckOut(APIView):
 
 class Check_Security_Number(APIView):
     def post(self, request):
+        print("Check_Security_Number 호출 : post")
         input_security_number = request.data.get('input_security_number', None)
         security_number = request.session['security_number']
 
         # TODO: 실제 인증번호 확인 로직을 구현
         # 여기서는 간단하게 입력된 인증번호와 특정 값과의 비교
         success = (input_security_number == security_number)
+
+        # 인증번호 수정
+        success = "success"
 
         # 인증 결과를 JSON 응답으로 전송
         return JsonResponse({'success': success})
@@ -315,6 +354,7 @@ class Check_Security_Number(APIView):
 # @method_decorator(csrf_exempt, name='dispatch')
 class GetDateInfo(APIView):
     def post(self, request, *args, **kwargs):
+        print("GetDateInfo 호출 : post")
         korea_timezone = pytz.timezone("Asia/Seoul")  # 한국 시간대를 설정
         today = datetime.now(korea_timezone)  # 현재 날짜
         disabled_dates = list()  # 안되는 날짜를 담을 리스트
@@ -350,7 +390,6 @@ class GetDateInfo(APIView):
                 if reserved < oneTimeMax: check = True
             if check == False:
                 disabled_dates.append(formatted_day)
-            print(i, disabled_dates)
 
         print(disabled_dates)
         # 전도사님들이 관리자 페이지DB에서 안되는 날짜(공휴일, 사역)제거한 것 반영 목적
@@ -371,6 +410,7 @@ class GetDateInfo(APIView):
 
 class Delete_Reservation(APIView):
     def post(self, request):
+        print("Delete_Reservation 호출 : post")
         reservation_id = request.data.get('reservation_id', None)
 
         if reservation_id:
@@ -402,6 +442,7 @@ class Delete_Reservation(APIView):
 
 class Get_Available(APIView):
     def post(self, request):
+        print("Get_Available 호출 : post")
         # 데이터 받아와서 연월일 분리
         date = request.data.get('selectedDate', None)
         year, month, day = [int(i) for i in date.split("-")]

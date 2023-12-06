@@ -437,8 +437,9 @@
         var temp_births = [];
 
         for (var i = 0; i < numberList.length; i++) {
-            var temp_name = $('#nameInput'+numberList[i]).val();
-            var temp_birth = $('#birthInput'+numberList[i]).val();
+            var temp_name = $('#nameInput_'+numberList[i]).val();
+            var temp_birth = $('#birthInput_'+numberList[i]).val();
+
 
             temp_names.push(temp_name);
             temp_births.push(temp_birth);
@@ -446,28 +447,14 @@
 
         nameInput = temp_names;
         birthInput = temp_births;
+        console.log((nameInput))
+        console.log((birthInput))
 
         if (!phone_number || !birthInput || !nameInput || !datepicker || !(timeSelect === "A" || timeSelect === "B")) {
             alert("입력되지 않은 정보가 있습니다. 모든 정보를 입력하세요.");
             return; // 필수 정보가 없으면 함수 종료
         }
 
-
-        // 현재 년도 뒷 2자리
-        var currentYear = parseInt(new Date().getFullYear().toString().slice(-2));
-
-        // 입력된 출생년도
-        birthYear = birthInput.slice(0, 2);
-        var birthYear = parseInt(birthYear);
-        var age = currentYear - birthYear + 1;
-
-        // 출생년도가 현재 년도로부터 11년 이상 지났는지 확인
-        if (age > 11 || age < 0) {
-            // 출생년도가 11년 이상 지났을 때의 동작을 여기에 추가
-            alert("11살까지만 입장 가능합니다.");
-            // location.replace("/");
-            return;
-        }
 
         $.ajax({
             url: "/user/Phone_Verification/",

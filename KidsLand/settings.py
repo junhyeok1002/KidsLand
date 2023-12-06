@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # 로컬 프로젝트에서는 True /배포시에 False
+DEBUG = True  # 로컬 프로젝트에서는 True /배포시에 False
 
 if DEBUG == False:
     # 디버그 모드가 아닐때는 SSL 인증으로 실행
