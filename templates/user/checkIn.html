@@ -72,7 +72,19 @@
         .datepicker table tr td.new, .datepicker table tr td.old {
             color: white;
         }
-
+    </style>
+    <style>
+        .plus-btn,
+        .minus-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: red;
+            color: white;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="container" style="max-width: 900px;display: block;padding: 0;">
@@ -108,7 +120,7 @@
 
 
 <select class="form-select" aria-label="Default select example"
-        style="width: 90%; display: flex; justify-content: center; align-items: center; margin: 0 auto; color: #495057;"
+        style="width: 90%; display: flex; justify-content: center; align-items: center; color: #495057; margin: 0 auto;"
         id="timeSelect">
     <option selected>시간을 선택하세요</option>
 </select>
@@ -212,36 +224,155 @@
             }
         });
     });
-
 </script>
 
 
-<div style="margin: 1rem 0rem;">
-    <div class="container mt-5" style="margin: 0 auto !important; width: 90%; padding: 0;">
-        <input type="text" id="nameInput" class="form-control" placeholder="아이의 이름을 입력해 주세요">
+<div id="dynamic-inputs">
+    <!-- 초기 입력창 -->
+    <div class="input-container" id="0">
+        <div style="display: flex; width: 90%; margin: 1rem auto 0;">
+            <!-- 아이의 이름 입력 창 -->
+            <div style="flex: 1;">
+                <input type="text" id="nameInput_0" class="form-control childName" placeholder="아이 이름">
+            </div>
+
+            <!-- 빈 공백 추가 -->
+            <div style="width: 2px;"></div>
+
+            <!-- 생년월일 입력 창 -->
+            <div style="flex: 1;">
+                <input type="text" id="birthInput_0" class="form-control childBirth" placeholder="생년월일(6자리)">
+            </div>
+
+            <!-- 빈 공백 추가 -->
+            <div style="width: 2px;"></div>
+
+            <div class="btn-container"
+                 style="width: 69px; display: flex; align-items: center; justify-content: center;">
+                <button class="plus-btn"
+                        style="background-color: white; border: 1px solid #87CEFA; color: #87CEFA; padding: 1rem; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center;"
+                        onclick="addRow()">+
+                </button>
+
+                <div style="width: 2px;"></div> <!-- 빈 공백 추가 -->
+
+                <button class="minus-btn"
+                        style="background-color: white; border: 1px solid #FFB6C1; color: #FFB6C1; padding: 1rem; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center;"
+                        onclick="removeRow(this)">-
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
 
-<div style="display: flex; justify-content: space-between; margin: 0 auto; width: 90%;">
-    <!-- 첫 번째 입력 창 -->
-    <input type="text" class="form-control" id="birthInput" placeholder="생년월일(6자리)">
-</div>
 <script>
-    // 출생년도 앞의 4자리를 담을 전역 변수
-    let birthYearPrefix = '';
-    // 출생년도 입력 창 이벤트 처리
-    document.getElementById('birthInput').addEventListener('input', function () {
-        // 6자리까지만 입력받도록 자르기
-        this.value = this.value.slice(0, 6);
+    var numberList = [0];
+    var number = 1;
 
-        // 입력된 값에서 숫자만 추출하여 다시 설정
-        this.value = this.value.replace(/[^0-9]/g, '');
+    function addRow() {
+        // 현재 줄의 개수 확인
+        var rowCount = document.querySelectorAll('.input-container').length;
 
-        // 앞 2자리를 전역 변수에 저장
-        birthYearPrefix = this.value.slice(0, 2);
-    });
+        // 3개 이상일 때는 추가되지 않음
+        if (rowCount >= 3) {
+            return;
+        }
+
+        // 새로운 입력창을 생성하여 동적으로 추가
+        var newInputRow = document.createElement('div');
+        newInputRow.classList.add('input-container');
+        newInputRow.id = number
+
+        var uniqueId_name = 'nameInput_' + number;
+        var uniqueId_birth = 'birthInput_' + number;
+        numberList.push(number);
+        number += 1;
+
+        newInputRow.innerHTML = `
+        <div style="display: flex; width: 90%; margin: 1rem auto 0;">
+            <!-- 아이의 이름 입력 창 -->
+            <div style="flex: 1;">
+                <input type="text" id="${uniqueId_name}" class="form-control childName" placeholder="아이 이름">
+            </div>
+
+            <!-- 빈 공백 추가 -->
+            <div style="width: 2px;"></div>
+
+            <!-- 생년월일 입력 창 -->
+            <div style="flex: 1;">
+                <input type="text" id="${uniqueId_birth}" class="form-control childBirth" placeholder="생년월일(6자리)">
+            </div>
+
+            <!-- 빈 공백 추가 -->
+            <div style="width: 2px;"></div>
+
+            <div class="btn-container" style="width: 69px; display: flex; align-items: center; justify-content: center;">
+                <button class="plus-btn"
+                        style="background-color: white; border: 1px solid #87CEFA; color: #87CEFA; padding: 1rem; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center;"
+                        onclick="addRow()">+
+                </button>
+
+                <div style="width: 2px;"></div> <!-- 빈 공백 추가 -->
+
+                <button class="minus-btn"
+                        style="background-color: white; border: 1px solid #FFB6C1; color: #FFB6C1; padding: 1rem; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center;"
+                        onclick="removeRow(this)">-
+                </button>
+            </div>
+        </div>
+      `;
+        document.getElementById('dynamic-inputs').appendChild(newInputRow);
+        restrictInput(uniqueId_birth);
+    }
+
+    function removeRow(btn) {
+        // 현재 줄의 개수 확인
+        var rowCount = document.querySelectorAll('.input-container').length;
+
+        // 해당 버튼이 속한 부모 요소(.input-container)를 찾아 아이디 구하기
+        var rowToRemove = btn.parentElement.parentElement.parentElement;
+        var rowId = btn.parentElement.parentElement.parentElement.id; // id number 빼오기 위함
+        rowId = parseInt(rowId, 10);
+
+        // 1개 이하일 때는 삭제되지 않음 -> 내용만 비움
+        if (rowCount <= 1) {
+            // ID가 "nameInput"인 입력 요소의 값을 빈 문자열로 설정하여 비우기
+            var nameid = document.getElementById("nameInput_" + rowId);
+            nameid.value = "";
+
+            // Bit가 "nameBirth"인 입력 요소의 값을 빈 문자열로 설정하여 비우기
+            var birthid = document.getElementById("birthInput_" + rowId);
+            birthid.value = "";
+
+            return;
+        }
+
+        // 전역변수에서 해당 아이디 삭제
+        var indexToRemove = numberList.indexOf(rowId);
+        if (indexToRemove !== -1) {
+            numberList.splice(indexToRemove, 1);
+        }
+
+        // 요소 삭제
+        rowToRemove.parentNode.removeChild(rowToRemove);
+    }
+
+    function restrictInput(elementId) {
+        var inputElement = document.getElementById(elementId);
+
+        inputElement.addEventListener('input', function () {
+            // 6자리까지만 입력받도록 자르기
+            this.value = this.value.slice(0, 6);
+
+            // 입력된 값에서 숫자만 추출하여 다시 설정
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
+
+    restrictInput('birthInput_0');
 </script>
+
 
 <div style="margin: 1rem 0rem;">
     <div style="display: flex; justify-content: space-between; margin: 0 auto; width: 90%;">
@@ -299,9 +430,22 @@
     $('#button-addon1').click(function () {
         datepicker = $('#datepicker').val();
         timeSelect = $('#timeSelect').val();
-        nameInput = $('#nameInput').val();
-        birthInput = $('#birthInput').val();
         phone_number = $('#phoneInput').val();
+
+
+        var temp_names = [];
+        var temp_births = [];
+
+        for (var i = 0; i < numberList.length; i++) {
+            var temp_name = $('#nameInput'+numberList[i]).val();
+            var temp_birth = $('#birthInput'+numberList[i]).val();
+
+            temp_names.push(temp_name);
+            temp_births.push(temp_birth);
+        }
+
+        nameInput = temp_names;
+        birthInput = temp_births;
 
         if (!phone_number || !birthInput || !nameInput || !datepicker || !(timeSelect === "A" || timeSelect === "B")) {
             alert("입력되지 않은 정보가 있습니다. 모든 정보를 입력하세요.");
