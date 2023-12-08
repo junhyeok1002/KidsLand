@@ -20,6 +20,7 @@ oneTimeMax = 30
 timelist = {"A 1:30-3:30", "B 4:00-6:00"}  # set으로 설정
 afterNdays = 30
 
+
 # 전역 함수
 def change_SEND_NUMBER():
     global SEND_NUMBER
@@ -32,6 +33,7 @@ def change_SEND_NUMBER():
             SEND_NUMBER = SEND_NUMBER  # 호출 시 마다 다시 갱신하여 DB수정 시 uginx, uwsgi를 재시작하지 않아도 되게끔하는 목적
     except Exception as e:
         print(e)
+
 
 def update_ReservationDB():  # 예약현황 디비 업데이트 함수
     # 어제(전날 이전)까지의 예약 정보는 디비에서 삭제(최신화)
@@ -60,6 +62,7 @@ def update_ReservationDB():  # 예약현황 디비 업데이트 함수
         print("오늘 B타임 삭제", reservations_to_delete_B.count())  # 개수 확인용 출력
         reservations_to_delete_B.delete()
 
+
 def get_Agree_terms():
     # 빈 리스트 생성
     items = list()
@@ -69,14 +72,16 @@ def get_Agree_terms():
 
     # 줄바꿈 기준으로 나누어서 리스트 안에 사전을 넣어 반환
     terms = last_agree_term.split("\n")
-    terms = [term for term in terms if term.strip()] # 좌우 공백 제거
+    terms = [term for term in terms if term.strip()]  # 좌우 공백 제거
 
-    for i,j in enumerate(terms):
-        temp = {'number': i+1, 'content': j.strip()}
+    for i, j in enumerate(terms):
+        temp = {'number': i + 1, 'content': j.strip()}
         items.append(temp)
     return items
 
 
+
+# 클래스 : 화면 View 담당
 class Main(APIView):
     def get(self, request):
         print("Main 호출 : get")
@@ -93,6 +98,33 @@ class Main(APIView):
         return render(request, "KidsLand/main.html", {'items': items})
 
 
+class CheckIn(APIView):
+    def get(self, request):
+        print("CheckIn 호출 : get")
+        agreed = request.session.get('agreed', 'false')
+        if agreed == 'true':  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
+            # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 > 가 아니고 마지막에 확인하는 것으로 변경
+            return render(request, "user/checkIn.html")
+        return render(request, "KidsLand/main.html", {'items': get_Agree_terms()})
+
+        # return render(request, "KidsLand/main.html")  # 아니면 main으로
+        # return Main().get(request)  # 아니면 main으로
+        # return redirect("/main/")
+
+
+class CheckOut(APIView):
+    def get(self, request):
+        print("CheckOut 호출 : get")
+
+        agreed = request.session.get('agreed', False)
+        if agreed == 'true':  # 약관 동의가 체크 되어야만 checkOut페이지로 이동
+            # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 -> 가 아니고 마지막에 확인하는 것으로 변경
+            return render(request, "user/checkOut.html")
+        return render(request, "KidsLand/main.html", {'items': get_Agree_terms()})
+
+
+
+
 class Phone_Verification(APIView):
     def post(self, request):
         print("Phone_Verification 호출 : post")
@@ -100,88 +132,96 @@ class Phone_Verification(APIView):
         security_number = str(random.randint(0, 999999)).zfill(6)
         request.session['security_number'] = security_number
         request.session['phone_number'] = phone_number
-        print(request.data)
+        print(type(request.data), request.data)
 
         response_data = {"message": ""}
         try:  # try 구문은 checkIn page를 위함
             # 변수 선언 부분에서 checkOut페이지는 예외발생함.
             datepicker = request.data['datepicker']
-            nameInput = request.data['nameInput[]']
-            birthInput = request.data['birthInput[]']
+            nameInput_list = request.data.getlist('nameInput[]')
+            birthInput_list = request.data.getlist('birthInput[]')
 
-            # 나중에 데이터 픽커 수정할떄 ->  날짜 지난 거 없앴는지 체크해서 reservation 수정
-
-            # validation1 : 부모님번호가 3개 이하로 예약되었는가?
-            matching_count = Reservation.objects.filter(parents_number=phone_number).count()
-            if (matching_count >= 3):
-                response_data["message"] = f"하나의 휴대폰 번호로 최대 3건까지 예약 가능합니다. 현재 건수는 {matching_count}회 입니다"
+            unique_NameBirth = set([nameInput_list[i]+birthInput_list[i] for i in range(len(nameInput_list))])
+            if len(unique_NameBirth) != len(nameInput_list):
+                response_data["message"] = f"중복된 아이의 정보가 있습니다."
                 return Response(response_data, status=400)
 
-            # validation2 : 한아이가 하루에 1타임만 -> 아이식별(아이이름, 생년월일, 부모님전화번호) 그리고 예약 날짜가 같은 건수가 1건도 없는지
-            try:  # 매칭되는 게 없을 때 넘어가기 용도
-                matching = Reservation.objects.filter(parents_number=phone_number,
-                                                      child_name=nameInput,
-                                                      child_birth=birthInput,
-                                                      reservation_date=datepicker)
-                already = matching.first().reservation_time  # 매칭되는 것이 없으면 여기서 예외 발생
-                if (matching.count() > 0):  # 매칭이 되면서 그 이전의 예약건수가 하나라도 있으면 실행
-                    response_data[
-                        "message"] = f"""한 아이당 하루에 한 타임만 이용할 수 있습니다.\n해당 아이는 {datepicker} {already}타임에 이미 예약되어 있습니다."""
-                    print(response_data["message"])
+            # 입력된 아이의 수 만큼 밸리데이션 진행
+            for i in range(len(nameInput_list)):
+                # 이름과 생년월일 입력
+                nameInput = nameInput_list[i]
+                birthInput = birthInput_list[i]
+
+                # validation1 : 부모님번호가 3개 이하로 예약되었는가?
+                matching_count = Reservation.objects.filter(parents_number=phone_number).count()
+                if (matching_count + len(nameInput_list) > 3):
+                    response_data["message"] = f"하나의 휴대폰 번호로 최대 3건까지 예약 가능합니다. 현재 예약된 건수는 {matching_count}회, 예약하려는 건수는 {len(nameInput_list)}회 입니다"
                     return Response(response_data, status=400)
-            except Exception as e:
-                print(e)
 
-            # validation3 : 생년월일이 합당한가?
-            input_date = str(birthInput)
-            result = False
-            try:
-                # 한국 시간대 설정
-                kst = pytz.timezone('Asia/Seoul')
-                # 현재 날짜와 시간을 한국 시간대로 가져오기
-                current_date = datetime.now(kst).date()
-                # 6자리 문자열을 변환
-                formatted_date = datetime.strptime(input_date, '%y%m%d').date()
+                # validation2 : 한아이가 하루에 1타임만 -> 아이식별(아이이름, 생년월일, 부모님전화번호) 그리고 예약 날짜가 같은 건수가 1건도 없는지
+                try:  # 매칭되는 게 없을 때 넘어가기 용도
+                    matching = Reservation.objects.filter(parents_number=phone_number,
+                                                          child_name=nameInput,
+                                                          child_birth=birthInput,
+                                                          reservation_date=datepicker)
+                    already = matching.first().reservation_time  # 매칭되는 것이 없으면 여기서 예외 발생
+                    if (matching.count() > 0):  # 매칭이 되면서 그 이전의 예약건수가 하나라도 있으면 실행
+                        response_data[
+                            "message"] = f"""한 아이당 하루에 한 타임만 이용할 수 있습니다.\n{nameInput} 님은 {datepicker} {already}타임에 이미 예약되어 있습니다."""
+                        print(response_data["message"])
+                        return Response(response_data, status=400)
+                except Exception as e:
+                    print(e)
 
-                # 입력된 년월일을 한국 시간대로 만들어서 유효성 확인 : 오늘 이전의 존재하는 날짜인가?
-                if formatted_date <= current_date:
-                    result = True
-                else:
+
+                # validation3 : 생년월일이 합당한가?
+                input_date = str(birthInput)
+                result = False
+                try:
+                    # 한국 시간대 설정
+                    kst = pytz.timezone('Asia/Seoul')
+                    # 현재 날짜와 시간을 한국 시간대로 가져오기
+                    current_date = datetime.now(kst).date()
+                    # 6자리 문자열을 변환
+                    formatted_date = datetime.strptime(input_date, '%y%m%d').date()
+
+                    # 입력된 년월일을 한국 시간대로 만들어서 유효성 확인 : 오늘 이전의 존재하는 날짜인가?
+                    if formatted_date <= current_date:
+                        result = True
+                    else:
+                        result = False
+
+
+                except ValueError:
                     result = False
 
-
-
-
-            except ValueError:
-                result = False
-
-            print(input_date, result)
-            if (result == False):
-                response_data["message"] = f"{input_date}는 유효하지 않은 생년월일입니다."
-                print(response_data["message"])
-                return Response(response_data, status=400)
-
-            # validation4 : 나이가 맞는가?
-            else:
-                birthYear = int(str(birthInput)[:2])
-
-                # 현재 날짜와 시간을 한국 시간대로 가져온 후, 년도를 뒤에 두 글자만 문자열로 만들기
-                current_datetime = datetime.now(pytz.timezone('Asia/Seoul'))
-                CurrentYear = int(current_datetime.year % 100)
-
-                age = CurrentYear - birthYear + 1
-                if age > 11 or age < 0:
-                    # 출생년도가 11년 이상 지났을 때
-                    response_data["message"] = "11살까지만 입장 가능합니다."
+                print(input_date, result)
+                if (result == False):
+                    response_data["message"] = f"{input_date}는 유효하지 않은 생년월일입니다."
                     print(response_data["message"])
                     return Response(response_data, status=400)
 
-            # validation5 : 약관에 동의했는가?
-            print(request.session['agreed'])
-            if request.session['agreed'] != 'true':
-                response_data["message"] = f"약관에 동의하지 않았습니다. 다시 처음부터 신청해주십시오."
-                print(response_data["message"])
-                return Response(response_data, status=400)
+                # validation4 : 나이가 맞는가?
+                else:
+                    birthYear = int(str(birthInput)[:2])
+
+                    # 현재 날짜와 시간을 한국 시간대로 가져온 후, 년도를 뒤에 두 글자만 문자열로 만들기
+                    current_datetime = datetime.now(pytz.timezone('Asia/Seoul'))
+                    CurrentYear = int(current_datetime.year % 100)
+
+                    age = CurrentYear - birthYear + 1
+                    if age > 11 or age < 0:
+                        # 출생년도가 11년 이상 지났을 때
+                        response_data["message"] = f"11살까지만 입장 가능합니다.({nameInput} 님)"
+                        print(response_data["message"])
+                        return Response(response_data, status=400)
+
+                # validation5 : 약관에 동의했는가?
+                print(request.session['agreed'])
+                if request.session['agreed'] != 'true':
+                    response_data["message"] = f"약관에 동의하지 않았습니다. 다시 처음부터 신청해주십시오."
+                    print(response_data["message"])
+                    return Response(response_data, status=400)
 
         except Exception as e:
             print(f"An exception occurred: {str(e)}")
@@ -189,7 +229,7 @@ class Phone_Verification(APIView):
         # ================================================================== 문자 보낼 때 필수 key값
         # API key, userid, sender, receiver, msg
         # API키, 알리고 사이트 아이디, 발신번호, 수신번호, 문자내용
-        change_SEND_NUMBER() # 발신 번호가 DB에 있으면 가져오는 함수
+        change_SEND_NUMBER()  # 발신 번호가 DB에 있으면 가져오는 함수
         sms_data = {'key': API_KEY,  # api key
                     'userid': USER_ID,  # 알리고 사이트 아이디
                     'sender': SEND_NUMBER,  # 발신번호
@@ -220,66 +260,72 @@ class Phone_Message(APIView):  # 클래스의 post함수가 너무 뚱뚱해서 
 
         datepicker = request.data.get('datepicker', None)
         timeSelect = request.data.get('timeSelect', None)
-        nameInput = request.data.get('nameInput[]', None)
-        birthInput = request.data.get('birthInput[]', None)
+        nameInput_list = request.data.getlist('nameInput[]')
+        birthInput_list = request.data.getlist('birthInput[]')
         phone_number = request.session['phone_number']
         reserve_status = request.data.get('status', None)
 
         time_convert = {"A": "1:30-3:30", "B": "4:00-6:00"}
 
-        Message = f"[키즈랜드 {reserve_status}] {nameInput}\n{datepicker} {time_convert[timeSelect]}\n대전새중앙교회 1층 웰컴카페 옆"
+        # 입력된 아이의 수 만큼 루프를 돌면서 문자를 보냄
+        for i in range(len(nameInput_list)):
+            # 이름과 생년월일
+            nameInput = nameInput_list[i]
+            birthInput = birthInput_list[i]
 
-        # ================================================================== 문자 보낼 때 필수 key값
-        # API key, userid, sender, receiver, msg
-        # API키, 알리고 사이트 아이디, 발신번호, 수신번호, 문자내용
+            Message = f"[키즈랜드 {reserve_status}] {nameInput}\n{datepicker} {time_convert[timeSelect]}\n대전새중앙교회 1층 웰컴카페 옆"
 
-        change_SEND_NUMBER()  # 발신 번호가 DB에 있으면 가져오는 함수
-        sms_data = {'key': API_KEY,  # api key
-                    'userid': USER_ID,  # 알리고 사이트 아이디
-                    'sender': SEND_NUMBER,  # 발신번호
-                    'receiver': phone_number,  # 수신번호 (,활용하여 1000명까지 추가 가능)
-                    'msg': Message,  # 문자 내용
-                    'msg_type': 'SMS',  # 메세지 타입 (SMS, LMS)
-                    'title': '[키즈랜드 발신]',  # 메세지 제목 (장문에 적용)
-                    'destination': f'{phone_number}|이름',  # %고객명% 치환용 입력
-                    # 'rdate' : '예약날짜',
-                    # 'rtime' : '예약시간',
-                    # 'testmode_yn' : '' #테스트모드 적용 여부 Y/N
-                    }
+            # ================================================================== 문자 보낼 때 필수 key값
+            # API key, userid, sender, receiver, msg
+            # API키, 알리고 사이트 아이디, 발신번호, 수신번호, 문자내용
 
-        # 임시수정 : 폰인증
-        # send_response = requests.post(SEND_URL, data=sms_data)  # 요청을 던지는 URL, 현재는 문자보내기
-        # print(send_response.json())
+            change_SEND_NUMBER()  # 발신 번호가 DB에 있으면 가져오는 함수
+            sms_data = {'key': API_KEY,  # api key
+                        'userid': USER_ID,  # 알리고 사이트 아이디
+                        'sender': SEND_NUMBER,  # 발신번호
+                        'receiver': phone_number,  # 수신번호 (,활용하여 1000명까지 추가 가능)
+                        'msg': Message,  # 문자 내용
+                        'msg_type': 'SMS',  # 메세지 타입 (SMS, LMS)
+                        'title': '[키즈랜드 발신]',  # 메세지 제목 (장문에 적용)
+                        'destination': f'{phone_number}|이름',  # %고객명% 치환용 입력
+                        # 'rdate' : '예약날짜',
+                        # 'rtime' : '예약시간',
+                        # 'testmode_yn' : '' #테스트모드 적용 여부 Y/N
+                        }
 
-        # 현재 타임 스탬프를 년-월-일 시:분:초.마이크로초 형식으로 포맷팅합니다.
-        korea_timezone = pytz.timezone("Asia/Seoul")  # 한국 시간대를 설정
-        formatted_datetime = datetime.now(korea_timezone).strftime("%Y-%m-%d %H:%M:%S.%f")
+            # 임시수정 : 폰인증
+            # send_response = requests.post(SEND_URL, data=sms_data)  # 요청을 던지는 URL, 현재는 문자보내기
+            # print(send_response.json())
 
-        # 이 타이밍 : 예약 추가 직전에 그 사이에 누군가가 예약했다는 것을
-        last_check = Reservation.objects.filter(reservation_date=datepicker,
-                                                reservation_time=f'{timeSelect} {time_convert[timeSelect]}')
-        if last_check.count() >= oneTimeMax:
-            return Response(status=400)
+            # 현재 타임 스탬프를 년-월-일 시:분:초.마이크로초 형식으로 포맷팅합니다.
+            korea_timezone = pytz.timezone("Asia/Seoul")  # 한국 시간대를 설정
+            formatted_datetime = datetime.now(korea_timezone).strftime("%Y-%m-%d %H:%M:%S.%f")
 
-        # 예약 현황 넣기
-        Reservation.objects.create(timestamp=formatted_datetime,
-                                   is_OK=request.session['agreed'],
-                                   child_name=nameInput,
-                                   child_birth=birthInput,
-                                   reservation_date=datepicker,
-                                   reservation_time=f'{timeSelect} {time_convert[timeSelect]}',
-                                   parents_number=phone_number,
-                                   status=reserve_status)
+            # 이 타이밍 : 예약 추가 직전에 그 사이에 누군가가 예약했다는 것을
+            last_check = Reservation.objects.filter(reservation_date=datepicker,
+                                                    reservation_time=f'{timeSelect} {time_convert[timeSelect]}')
+            if last_check.count() >= oneTimeMax:
+                return Response(status=400)
 
-        # 로그에도 넣기
-        LogHistory.objects.create(timestamp=formatted_datetime,
-                                  is_OK=request.session['agreed'],
-                                  child_name=nameInput,
-                                  child_birth=birthInput,
-                                  reservation_date=datepicker,
-                                  reservation_time=f'{timeSelect} {time_convert[timeSelect]}',
-                                  parents_number=phone_number,
-                                  status=reserve_status)
+            # 예약 현황 넣기
+            Reservation.objects.create(timestamp=formatted_datetime,
+                                       is_OK=request.session['agreed'],
+                                       child_name=nameInput,
+                                       child_birth=birthInput,
+                                       reservation_date=datepicker,
+                                       reservation_time=f'{timeSelect} {time_convert[timeSelect]}',
+                                       parents_number=phone_number,
+                                       status=reserve_status)
+
+            # 로그에도 넣기
+            LogHistory.objects.create(timestamp=formatted_datetime,
+                                      is_OK=request.session['agreed'],
+                                      child_name=nameInput,
+                                      child_birth=birthInput,
+                                      reservation_date=datepicker,
+                                      reservation_time=f'{timeSelect} {time_convert[timeSelect]}',
+                                      parents_number=phone_number,
+                                      status=reserve_status)
 
         return Response(status=200)
 
@@ -307,31 +353,6 @@ class IsOK(APIView):
         agreed = request.data.get('agreed', 'false')  # A전송된 동의 여부 값을 가져옴
         request.session['agreed'] = agreed  # 세션에 동의 여부 저장
         return JsonResponse({'message': '약관 동의 여부가 업데이트되었습니다.'})
-
-
-class CheckIn(APIView):
-    def get(self, request):
-        print("CheckIn 호출 : get")
-        agreed = request.session.get('agreed', 'false')
-        if agreed == 'true':  # 약관 동의가 체크 되어야만 checkIn페이지로 이동
-            # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 > 가 아니고 마지막에 확인하는 것으로 변경
-            return render(request, "user/checkIn.html")
-        return render(request, "KidsLand/main.html", {'items': get_Agree_terms()})
-
-        # return render(request, "KidsLand/main.html")  # 아니면 main으로
-        # return Main().get(request)  # 아니면 main으로
-        # return redirect("/main/")
-
-
-class CheckOut(APIView):
-    def get(self, request):
-        print("CheckOut 호출 : get")
-
-        agreed = request.session.get('agreed', False)
-        if agreed == 'true':  # 약관 동의가 체크 되어야만 checkOut페이지로 이동
-            # request.session['agreed'] = False  # 뒤로 가기 악용하여 동의한 것 처럼 만드는 것 방지 -> 가 아니고 마지막에 확인하는 것으로 변경
-            return render(request, "user/checkOut.html")
-        return render(request, "KidsLand/main.html", {'items': get_Agree_terms()})
 
 
 class Check_Security_Number(APIView):

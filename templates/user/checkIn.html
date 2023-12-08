@@ -437,8 +437,8 @@
         var temp_births = [];
 
         for (var i = 0; i < numberList.length; i++) {
-            var temp_name = $('#nameInput_'+numberList[i]).val();
-            var temp_birth = $('#birthInput_'+numberList[i]).val();
+            var temp_name = $('#nameInput_' + numberList[i]).val();
+            var temp_birth = $('#birthInput_' + numberList[i]).val();
 
 
             temp_names.push(temp_name);
@@ -450,7 +450,26 @@
         console.log((nameInput))
         console.log((birthInput))
 
-        if (!phone_number || !birthInput || !nameInput || !datepicker || !(timeSelect === "A" || timeSelect === "B")) {
+
+        // 전부 입력 체크
+        // nameInput이 리스트 전부 입력 체크
+        for (let i = 0; i < nameInput.length; i++) {
+            if (!nameInput[i]) {
+                alert("입력되지 않은 정보가 있습니다. 모든 정보를 입력하세요.");
+                return;
+            }
+        }
+
+        // birthInput이 리스트 전부 입력 체크
+        for (let i = 0; i < birthInput.length; i++) {
+            if (!birthInput[i]) {
+                alert("입력되지 않은 정보가 있습니다. 모든 정보를 입력하세요.");
+                return;
+            }
+        }
+
+        // 나머지 요소 전부 입력 체크
+        if (!phone_number || !datepicker || !(timeSelect === "A" || timeSelect === "B")) {
             alert("입력되지 않은 정보가 있습니다. 모든 정보를 입력하세요.");
             return; // 필수 정보가 없으면 함수 종료
         }
