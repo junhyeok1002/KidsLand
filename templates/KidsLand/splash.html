@@ -1,6 +1,5 @@
 <!-- myapp/templates/splash.html -->
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,32 +21,33 @@
             width: 100vw;
             height: 100vh;
             z-index: 9999;
+            overflow: hidden;
         }
         #splash-image img {
-            max-width: 100%; /* 이미지가 부모의 최대 너비에 맞춰지도록 설정 */
-            height: auto; /* 이미지의 높이를 자동으로 조절하여 가로 세로 비율 유지 */
+            max-width: 900px; /* 이미지의 최대 너비를 900px로 설정 */
+            width: 100%;
+            height: auto;
             display: block;
-            margin: 0 auto; /* 이미지를 수평 중앙에 정렬 */
+            margin: 0 auto;
+            position: relative;
+            top: 50%; /* 이미지의 상단을 창의 중앙에 맞추기 위한 설정 */
+            transform: translateY(-50%);
         }
     </style>
 </head>
-<body style="max-width: 900px; margin: 0 auto;display: block;">
+<body style="max-width: 900px; margin: 0 auto; display: block;">
     <div id="splash-image">
         <img src="{% static '../../media/images/kidsland.png' %}">
     </div>
 
     <!-- jQuery CDN 추가 -->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-        <script>
+    <script>
         $(document).ready(function() {
-            // 이미지를 2초 동안 나타나게 하고, fade out 효과 추가
             $("#splash-image").fadeIn(1000).delay(1000).fadeOut(500, function() {
-                // fadeOut이 완료된 후에 이 함수가 실행됩니다.
-                // 이곳에서 메인 화면으로의 이동을 처리할 수 있습니다.
                 location.replace("/main/");
             });
 
-            // 스플래시 화면이 표시될 동안 스크롤 방지
             $("body").css("overflow", "hidden");
         });
     </script>
