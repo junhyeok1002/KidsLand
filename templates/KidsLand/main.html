@@ -135,6 +135,12 @@
         신청확인/취소하기
     </button>
 </ul>
+<ul class="list-group list-group-horizontal" style="height: 84px;border-radius: 10px 10px 0px 0px;">
+    <button id="saturday_school_button" class="list-group-item"
+            style="width: 100%; display: inline-block; background-color: #F7E8CC">
+        토요스쿨 신청하기
+    </button>
+</ul>
 
 <script>
     $('#checkIn_button').click(function () {
@@ -148,6 +154,14 @@
     $('#checkOut_button').click(function () {
         if ($('#flexCheckIndeterminate').prop('checked')) {
             window.location.href = '/user/checkOut'; // 뒤로가기 가능하게 브라우저 히스토리 남기기
+        } else {
+            alert('약관에 동의해주세요.');
+        }
+    });
+
+    $('#saturday_school_button').click(function () {
+        if ($('#flexCheckIndeterminate').prop('checked')) {
+            window.location.href = 'https://forms.gle/eqBu4RyyZg1uPiFN6'; // 뒤로가기 가능하게 브라우저 히스토리 남기기
         } else {
             alert('약관에 동의해주세요.');
         }
