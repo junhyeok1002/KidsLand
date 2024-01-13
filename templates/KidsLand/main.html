@@ -253,10 +253,8 @@
 
         document.body.style.overflow = "hidden"; // 스크롤 없애기
         document.body.addEventListener('touchmove', (e) => e.preventDefault());
-
-        $('body').addClass('scrollDisable').on('scroll touchmove mousewheel', function(e){
-            e.preventDefault();
-        });
+        document.body.addEventListener('scroll', (e) => e.preventDefault());
+        document.body.addEventListener('mousewheel', (e) => e.preventDefault());
 
     };
 
@@ -268,10 +266,8 @@
 
         document.body.style.overflow = "visible";
         document.body.removeEventListener('touchmove', (e) => e.preventDefault());
-
-        function scrollAble(){
-            $('body').removeClass('scrollDisable').off('scroll touchmove mousewheel');
-        }
+        document.body.removeEventListener('scroll', (e) => e.preventDefault());
+        document.body.removeEventListener('mousewheel', (e) => e.preventDefault());
     });
 
     // 신청 페이지 바로 이동
