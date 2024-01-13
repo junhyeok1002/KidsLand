@@ -250,8 +250,12 @@
         const modal = document.getElementById("modal_add_feed");
         modal.style.top = window.pageYOffset + 'px'; // top을 이용해 시작 y위치를 바꿔줌
         modal.style.display = "flex";
-        document.body.style.overflowY = "hidden"; // 스크롤 없애기
+        document.body.style.overflow = "hidden"; // 스크롤 없애기
         document.documentElement.style.overflowY = 'hidden';
+
+        $('body').addClass('scrollDisable').on('scroll touchmove mousewheel', function(e){
+            e.preventDefault();
+        });
 
     };
 
@@ -260,8 +264,12 @@
     buttonCloseModal.addEventListener("click", function () {
         const modal = document.getElementById("modal_add_feed");
         modal.style.display = "none";
-        document.body.style.overflowY = "visible";
+        document.body.style.overflow = "visible";
         document.documentElement.style.overflowY = 'visible';
+
+        function scrollAble(){
+            $('body').removeClass('scrollDisable').off('scroll touchmove mousewheel');
+        }
     });
 
     // 신청 페이지 바로 이동
