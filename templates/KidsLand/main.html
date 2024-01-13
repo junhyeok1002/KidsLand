@@ -256,6 +256,8 @@
         document.body.addEventListener('scroll', (e) => e.preventDefault());
         document.body.addEventListener('mousewheel', (e) => e.preventDefault());
 
+        document.body.addEventListener('onclick', (e) => e.preventDefault());
+
     };
 
     // 모달 닫기 코드
@@ -268,6 +270,8 @@
         document.body.removeEventListener('touchmove', (e) => e.preventDefault());
         document.body.removeEventListener('scroll', (e) => e.preventDefault());
         document.body.removeEventListener('mousewheel', (e) => e.preventDefault());
+
+        document.body.removeEventListener('onclick', (e) => e.preventDefault());
     });
 
     // 신청 페이지 바로 이동
