@@ -251,6 +251,8 @@
         modal.style.top = window.pageYOffset + 'px'; // top을 이용해 시작 y위치를 바꿔줌
         modal.style.display = "flex";
         document.body.style.overflowY = "hidden"; // 스크롤 없애기
+        document.documentElement.style.overflowY = 'hidden';
+
     };
 
     // 모달 닫기 코드
@@ -259,6 +261,7 @@
         const modal = document.getElementById("modal_add_feed");
         modal.style.display = "none";
         document.body.style.overflowY = "visible";
+        document.documentElement.style.overflowY = 'visible';
     });
 
     // 신청 페이지 바로 이동
