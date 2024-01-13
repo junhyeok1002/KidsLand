@@ -98,16 +98,8 @@
             overflow: hidden;
         }
 
-        .modal_title {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            font-size: 1rem;
-        }
-
-        .modal_title_side {
-            flex: 0 0 40px;
-            text-align: center;
+        body.no-touch-action {
+            touch-action: none !important;;
         }
 
     </style>
@@ -252,10 +244,11 @@
         modal.style.display = "flex";
 
         document.body.style.overflow = "hidden"; // 스크롤 없애기
+        document.body.classList.add('no-touch-action'); // 브라우저 터치 없애기
+
         document.body.addEventListener('touchmove', (e) => e.preventDefault());
         document.body.addEventListener('scroll', (e) => e.preventDefault());
         document.body.addEventListener('mousewheel', (e) => e.preventDefault());
-
         document.body.addEventListener('onclick', (e) => e.preventDefault());
 
     };
@@ -267,10 +260,11 @@
         modal.style.display = "none";
 
         document.body.style.overflow = "visible";
+        document.body.classList.remove('no-touch-action'); // 브라우저 터치 없애기
+
         document.body.removeEventListener('touchmove', (e) => e.preventDefault());
         document.body.removeEventListener('scroll', (e) => e.preventDefault());
         document.body.removeEventListener('mousewheel', (e) => e.preventDefault());
-
         document.body.removeEventListener('onclick', (e) => e.preventDefault());
     });
 
