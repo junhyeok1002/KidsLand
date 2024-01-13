@@ -99,7 +99,9 @@
         }
 
         body.no-touch-action {
-            touch-action: none !important;;
+            position: fixed;
+            overflow: hidden;
+            touch-action: none;
         }
 
     </style>
@@ -243,7 +245,7 @@
         modal.style.top = window.pageYOffset + 'px'; // top을 이용해 시작 y위치를 바꿔줌
         modal.style.display = "flex";
 
-        document.body.style.overflow = "hidden"; // 스크롤 없애기
+        {#document.body.style.overflow = "hidden"; // 스크롤 없애기#}
         document.body.classList.add('no-touch-action'); // 브라우저 터치 없애기
 
         document.body.addEventListener('touchmove', (e) => e.preventDefault());
@@ -259,7 +261,7 @@
         const modal = document.getElementById("modal_add_feed");
         modal.style.display = "none";
 
-        document.body.style.overflow = "visible";
+        {#document.body.style.overflow = "visible";#}
         document.body.classList.remove('no-touch-action'); // 브라우저 터치 없애기
 
         document.body.removeEventListener('touchmove', (e) => e.preventDefault());
