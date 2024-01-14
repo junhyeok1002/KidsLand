@@ -241,7 +241,7 @@
     // 모달 띄우기 코드
     window.onload = function () {
         const modal = document.getElementById("modal_add_feed");
-        modal.style.top = window.pageYOffset + 'px'; // top을 이용해 시작 y위치를 바꿔줌
+        modal.style.top = 0 + 'px'; // window.pageYOffset + 'px'; // top을 이용해 시작 y위치를 바꿔줌
         modal.style.display = "flex";
 
         {#document.body.style.overflow = "hidden"; // 스크롤 없애기#}
@@ -251,7 +251,6 @@
         document.body.addEventListener('scroll', (e) => e.preventDefault());
         document.body.addEventListener('mousewheel', (e) => e.preventDefault());
         document.body.addEventListener('onclick', (e) => e.preventDefault());
-
     };
 
     // 모달 닫기 코드
