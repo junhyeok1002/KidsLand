@@ -397,7 +397,7 @@ class GetDateInfo(APIView):
                     disabled_dates.append(formatted_day)
 
             # 주말인지 확인 (0: 월요일, 6: 일요일)
-            if current_day.weekday() in (5, 6):  # 0부터 4까지가 월요일부터 금요일까지의 인덱스
+            if current_day.weekday() in ([6]):  # 0부터 5까지가 월요일부터 토요일까지의 인덱스
                 disabled_dates.append(formatted_day)
 
             check = False
