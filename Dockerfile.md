@@ -26,15 +26,34 @@ setting.py의 Debug = True 설정
 cd home/ubuntu/KidsLand # 이동
 sudo apt update # 먼저하고
 sudo apt install python3-pip # 입력합니다.
+
+(이 타이밍에서 가상환경 만들기)
+3.10으로 그냥 가상 환경 만들고, 그 파이썬 버전은 그 안에서 쇼부 본다음 아래의 명령어 진행 하는 것으로
+sudo apt install python3-venv
+python3 -m venv venv # venv라는 이름으로 가상환경 생성
+source venv/bin/activate # 활성화
+deactivate # 비활성화
+
+활성화 상태에서 파이썬 3.8.10으로 변경
+sudo apt install curl
+curl https://pyenv.run | bash
+export PATH="$HOME/.pyenv/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+pyenv install 3.8.10
+pyenv local 3.8.10
+python --version ## 확인
+python -m pip install --upgrade pip ## 파이썬 버전으로 pip 버전도 맞추기 => 가상환경에서 pip 버전을 맞추었으므로 pip3가 아닌 pip사용
+
 pip install -r requirements.txt
-python3 manage.py makemigrations
-python3 manage.py migrate
+python manage.py makemigrations
+python manage.py migrate
 
 # 그냥 실행해보려면 
-python3 manage.py runserver 0.0.0.0:8000으로 실행
+python manage.py runserver 0.0.0.0:8000으로 실행
 
 # uwsgi, nginx 세팅
-pip3 install uwsgi
+pip install uwsgi
 
 # 프로젝트 파일 바깥에서 실행 (ubuntu 폴더에서)
 cd /home/ubuntu/
