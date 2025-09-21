@@ -170,6 +170,13 @@
                             var aCount = parseInt(response.A, 10);
                             var bCount = parseInt(response.B, 10);
 
+                            // 20250921 상재목사님 부탁으로 12월 15일까지 월요일 A타임은 전부 제외
+                            var isMonday = new Date(selectedDate).getDay() === 1; // 0=일요일, 1=월요일
+                            var limitDate = new Date("2025-12-15");
+                            if (isMonday && dateObj <= limitDate) {
+                                aCount = 0;
+                            }
+
                             // 0보다 커야 옵션 표시함
                             if (aCount > 0) {
                                 dynamicOptions.push({value: "A", text: "A타임 : 1:30-3:30(120분) - " + aCount + "명 예약가능"});
