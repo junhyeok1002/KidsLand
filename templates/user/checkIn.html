@@ -178,6 +178,14 @@
                                 aCount = 0;
                             }
 
+                            // 20260920 이보영전도사님 부탁으로 12월 15일까지 수요일 A타임은 전부 제외
+                            var dateObj = new Date(selectedDate);
+                            var isMonday = dateObj.getDay() === 3; // 3-수요일
+                            var limitDate = new Date("2026-12-15");
+                            if (isMonday && dateObj <= limitDate) {
+                                aCount = 0;
+                            }
+
                             // 0보다 커야 옵션 표시함
                             if (aCount > 0) {
                                 dynamicOptions.push({value: "A", text: "A타임 : 1:30-3:30(120분) - " + aCount + "명 예약가능"});
